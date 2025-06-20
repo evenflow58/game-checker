@@ -1,0 +1,24 @@
+{
+  "name": "game-checker",
+  "version": "1.0.0",
+  "description": "An application to check what games you own",
+  "main": "index.js",
+  "scripts": {
+    "build:ui": "cd ./ui && npm run build && cd ",
+    "deploy:bucket": "sam build -t ./infrastructure/codeRepoBucket/template.yaml && cd ./infrastructure/codeRepoBucket/ && sam deploy && cd ",
+    "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
+    "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
+    "install:ui": "cd ./ui && npm install && cd ",
+    "test:ui": "cd ./ui && npm test && cd "
+  },
+  "author": "Evan Johnson",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evenflow58/game-checker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/evenflow58/game-checker/issues"
+  },
+  "homepage": "https://github.com/evenflow58/game-checker#readme"
+}

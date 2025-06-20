@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo Installing base packages
+      - npm i
+
+      - echo Installing UI packages
+      - npm run install:ui
+  build:
+    commands:
+      - echo Build started for ui
+      - npm run build:ui
+  post_build:
+    commands:
+      - echo Testing UI
+      - npm run test:ui
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+
+artifacts:
+  files:
+    - '**/*'
+  name: game-checker-$(date +%Y-%m-%d)

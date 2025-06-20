@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template for a basic AWS CodePipeline with GitHub source.
+
+Parameters:
+  GitHubRepo:
+    Type: String
+    Description: GitHub repository name
+  GitHubBranch:
+    Type: String
+    Default: main
+    Description: GitHub branch to use
+  Prefix:
+    Type:  String
+    AllowedPattern: "[A-Za-z0-9-]*"
+    Default: ''
+
+Conditions:
+  IsProduction: !Equals [!Ref GitHubBranch, "main"]
+
+Resources:
+  PipelineArtifactBucket:
+    Type: AWS::S3::Bucket
+
+  UiBuildRunner:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ["${Prefix}UiBuildRunner", { Prefix: !Ref Prefix}] 
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:6.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: BUILD_OUTPUT_BUCKET
+            Value: !ImportValue ArtifactBucketId
+          - Name: S3_BUCKET
+            Value: !ImportValue ArtifactBucketId
+      ServiceRole: !ImportValue BuildExecutionRoleArn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspecs/ui-build.yaml
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !ImportValue PipelineInfrastructureRoleArn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineArtifactBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                Owner: "{{resolve:secretsmanager:Github:SecretString:owner}}"
+                Repo: !Ref GitHubRepo
+                Branch: !Ref GitHubBranch
+                PollForSourceChanges: false
+                OAuthToken: "{{resolve:secretsmanager:Github:SecretString:token}}"
+              RunOrder: 1
+
+Outputs:
+  PipelineName:
+    Description: Name of the created CodePipeline
+    Value: !Ref CodePipeline

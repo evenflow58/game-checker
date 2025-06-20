@@ -1,0 +1,507 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The Game Checker roles for the pipeline
+
+Resources:
+  BuildExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+      - PolicyName: Build-CloudFormation
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - codebuild:StartBuild
+                - codebuild:BatchGetBuilds
+                - codebuild:StartBuildBatch
+              Resource: !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource:
+                - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*
+            - Effect: Allow
+              Action:
+                - s3:ListObjectsV2
+                - s3:ListBucket
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:GetObject
+                - s3:GetObjectVersion
+                - s3:DeleteObject
+              Resource: arn:aws:s3:::*
+
+  PipelineInfrastructureRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+                - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: Pipeline-CloudFormation
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - codepipeline:GetPipeline
+                - codepipeline:UpdatePipeline
+                - codepipeline:DeregisterWebhookWithThirdParty
+                - codepipeline:RegisterWebhookWithThirdParty
+                - codepipeline:PutWebhook
+                - codepipeline:DeletePipeline
+                - codepipeline:DeleteWebhook
+                - codepipeline:TagResource
+                - codepipeline:UntagResource
+                - codepipeline:PutJobSuccessResult
+                - codepipeline:PutJobFailureResult
+              Resource: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:GetObject
+                - s3:GetObjectVersion
+                - s3:DeleteObject
+              Resource: arn:aws:s3:::*
+            - Effect: Allow
+              Action:
+                - cloudformation:DescribeStacks
+                - cloudformation:CreateChangeSet
+                - cloudformation:DescribeChangeSet
+                - cloudformation:ExecuteChangeSet
+                - cloudformation:CreateStack
+                - cloudformation:UpdateStack
+                - cloudformation:DeleteChangeSet
+              Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+                - iam:CreateRole
+                - iam:DeleteRole
+                - iam:GetRole
+                - iam:GetRolePolicy
+                - iam:PutRolePolicy
+                - iam:DeleteRolePolicy
+                - iam:AttachRolePolicy
+                - iam:DetachRolePolicy
+                - iam:CreateServiceLinkedRole
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - apigateway:POST
+                - apigateway:DELETE
+                - apigateway:GET
+                - apigateway:PUT
+              Resource: !Sub "arn:aws:apigateway:${AWS::Region}::*"
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+            - Effect: Allow
+              Action:
+                - codebuild:StartBuild
+                - codebuild:BatchGetBuilds
+              Resource: !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+                - codedeploy:CreateApplication
+                - codedeploy:DeleteApplication
+                - codedeploy:CreateDeploymentGroup
+                - codedeploy:DeleteDeploymentGroup
+                - codedeploy:CreateDeployment
+                - codedeploy:GetDeployment
+                - codedeploy:GetDeploymentConfig
+                - codedeploy:RegisterApplicationRevision
+              Resource: !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:*:*"
+            - Effect: Allow
+              Action:
+                - cloudfront:UpdateDistribution
+                - cloudfront:CreateCloudFrontOriginAccessIdentity
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - route53:CreateHostedZone
+                - route53:GetHostedZone
+                - route53:ChangeResourceRecordSets
+                - route53:ListResourceRecordSets
+                - route53:ListQueryLoggingConfigs
+                - route53:GetChange
+                - route53:DeleteHostedZone
+                - route53:ListTagsForResource
+              Resource: arn:aws:route53:::*
+            - Effect: Allow
+              Action:
+                - route53:CreateHostedZone
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - logs:CreateLogGroup
+                - logs:DeleteLogGroup
+                - logs:PutRetentionPolicy
+              Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+            - Effect: Allow
+              Action:
+                - codestar-connections:UseConnection
+              Resource: arn:aws:codestar-connections:us-east-2:625961017727:connection/760e3889-f416-44aa-9c62-001a92098608
+            - Action:
+                - lambda:InvokeFunction
+              Effect: Allow
+              Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+            - Effect: Allow
+              Action:
+                - codebuild:StartBuild
+                - codebuild:StopBuild
+                - codebuild:RetryBuild
+                - codebuild:BatchGetBuilds
+                - codebuild:StartBuildBatch
+                - codebuild:BatchGetBuildBatches
+              Resource: !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:*"
+            
+  CloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Action:
+            - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+              - cloudformation.amazonaws.com
+      Path: /
+      Policies:
+        - PolicyName: CloudFormationPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - cloudformation:CreateChangeSet
+                Effect: Allow
+                Resource: !Sub 'arn:aws:cloudformation:${AWS::Region}:aws:transform/*'
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:DeleteLogGroup
+                Effect: Allow
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
+              - Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:UpdateStack
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ListChangeSets
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:ValidateTemplate
+                Effect: Allow
+                Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*"
+              - Action:
+                  - lambda:EnableReplication*
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - cloudfront:*
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - iam:*
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - lambda:DeleteFunction
+                  - lambda:CreateFunction
+                  - lambda:UpdateFunction
+                  - lambda:GetFunction
+                  - lambda:TagResource
+                  - lambda:UntagResource
+                  - lambda:ListVersionsByFunction
+                  - lambda:ListTags
+                  - lambda:PublishVersion
+                  - lambda:CreateAlias
+                  - lambda:DeleteAlias
+                  - lambda:UpdateAlias
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:GetFunctionCodeSigningConfig
+                  - lambda:AddPermission
+                  - lambda:UpdatePermission
+                  - lambda:RemovePermission
+                Effect: Allow
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+              - Action:
+                  - route53:GetHostedZone
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListResourceRecordSets
+                Effect: Allow
+                Resource: arn:aws:route53:::hostedzone/*
+              - Action:
+                  - route53:GetChange
+                  - route53:GetChangeRequest
+                Effect: Allow
+                Resource: arn:aws:route53:::change/*
+              - Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:DeleteCertificate
+                Effect: Allow
+                Resource: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/*'
+              - Action:
+                  - s3:PutBucketPolicy
+                  - s3:GetBucketPolicy
+                  - s3:DeleteBucketPolicy
+                Effect: Allow
+                Resource: arn:aws:s3:::*
+              - Action:
+                  - s3:GetObject
+                Effect: Allow
+                Resource:
+                  Fn::Sub:
+                    - 'arn:aws:s3:::${ArtifactBucketId}/*'
+                    - ArtifactBucketId: !ImportValue ArtifactBucketId
+              - Action:
+                  - apigateway:POST
+                Effect: Allow
+                Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::/restapis'
+              - Action:
+                  - apigateway:DELETE
+                  - apigateway:GET
+                  - apigateway:PUT
+                  - apigateway:POST
+                  - apigateway:PATCH
+                Effect: Allow
+                Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::*'
+              # - Action:
+              #     - dynamodb:DescribeTable
+              #     - dynamodb:CreateTable
+              #     - dynamodb:DeleteTable
+              #     - dynamodb:UpdateTable
+              #   Effect: Allow
+              #   Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*'
+              # - Action:
+              #     - SNS:GetTopicAttributes
+              #     - SNS:SetTopicAttributes
+              #     - SNS:CreateTopic
+              #     - SNS:Subscribe
+              #     - SNS:DeleteTopic
+              #   Effect: Allow
+              #   Resource: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*'
+              - Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:PutBucketVersioning
+                  - s3:PutBucketAcl
+                  - s3:PutBucketNotification
+                Resource: arn:aws:s3:::*
+
+  InfrastructureRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - cloudformation.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: CloudFormation
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+              - s3:CreateBucket
+              - s3:DeleteBucket
+              - s3:PutBucketVersioning
+              - s3:PutBucketAcl
+            Resource: arn:aws:s3:::*
+
+  SamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:user/evenflow58'
+      Path: /
+      Policies:
+        - PolicyName: CloudFormationPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - cloudformation:CreateChangeSet
+                Effect: Allow
+                Resource: !Sub 'arn:aws:cloudformation:${AWS::Region}:aws:transform/*'
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:DeleteLogGroup
+                Effect: Allow
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
+              - Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:UpdateStack
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ListChangeSets
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:ValidateTemplate
+                Effect: Allow
+                Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*"
+              - Action:
+                  - lambda:EnableReplication*
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - cloudfront:*
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - iam:*
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - lambda:DeleteFunction
+                  - lambda:CreateFunction
+                  - lambda:UpdateFunction
+                  - lambda:GetFunction
+                  - lambda:TagResource
+                  - lambda:UntagResource
+                  - lambda:ListVersionsByFunction
+                  - lambda:ListTags
+                  - lambda:PublishVersion
+                  - lambda:CreateAlias
+                  - lambda:DeleteAlias
+                  - lambda:UpdateAlias
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:GetFunctionCodeSigningConfig
+                  - lambda:AddPermission
+                  - lambda:UpdatePermission
+                  - lambda:RemovePermission
+                Effect: Allow
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+              - Action:
+                  - route53:GetHostedZone
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListResourceRecordSets
+                Effect: Allow
+                Resource: arn:aws:route53:::hostedzone/*
+              - Action:
+                  - route53:GetChange
+                  - route53:GetChangeRequest
+                Effect: Allow
+                Resource: arn:aws:route53:::change/*
+              - Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:DeleteCertificate
+                Effect: Allow
+                Resource: !Sub 'arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/*'
+              - Action:
+                  - s3:PutBucketPolicy
+                  - s3:GetBucketPolicy
+                  - s3:DeleteBucketPolicy
+                Effect: Allow
+                Resource: arn:aws:s3:::*
+              - Action:
+                  - s3:GetObject
+                Effect: Allow
+                Resource:
+                  Fn::Sub:
+                    - 'arn:aws:s3:::${ArtifactBucketId}/*'
+                    - ArtifactBucketId: !ImportValue ArtifactBucketId
+              - Action:
+                  - apigateway:POST
+                Effect: Allow
+                Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::/restapis'
+              - Action:
+                  - apigateway:DELETE
+                  - apigateway:GET
+                  - apigateway:PUT
+                  - apigateway:POST
+                  - apigateway:PATCH
+                Effect: Allow
+                Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: arn:aws:s3:::*
+
+Outputs:
+  BuildExecutionRoleArn:
+    Value: !GetAtt BuildExecutionRole.Arn
+    Description: The ARN of the Build Execution Role
+    Export:
+      Name: BuildExecutionRoleArn
+
+  PipelineInfrastructureRoleArn:
+    Value: !GetAtt PipelineInfrastructureRole.Arn
+    Description: The ARN of the Pipeline Infrastructure Role
+    Export:
+      Name: PipelineInfrastructureRoleArn
+
+  CloudFormationExecutionRoleArn:
+    Value: !GetAtt CloudFormationExecutionRole.Arn
+    Description: The ARN of the Cloud Formation Execution Role
+    Export:
+      Name: CloudFormationExecutionRoleArn
+
+  InfrastructureRoleArn:
+    Value: !GetAtt InfrastructureRole.Arn
+    Description: The ARN of the Infrastructure Role
+    Export:
+      Name: InfrastructureRoleArn
+
+  SamRoleArn:
+    Value: !GetAtt SamRole.Arn
+    Description: The ARN of the SAM Role
+    Export:
+      Name: SamRoleArn
