@@ -57,9 +57,9 @@ Resources:
                 Category: Source
                 Owner: ThirdParty
                 Provider: GitHub
-                Version: '1'
+                Version: 1
               OutputArtifacts:
-                - Name: SourceOutput
+                - Name: SourceCode
               Configuration:
                 Owner: "{{resolve:secretsmanager:Github:SecretString:owner}}"
                 Repo: !Ref GitHubRepo
@@ -67,6 +67,22 @@ Resources:
                 PollForSourceChanges: false
                 OAuthToken: "{{resolve:secretsmanager:Github:SecretString:token}}"
               RunOrder: 1
+        - Name: Build
+          Actions:
+          - Name: BuildUi
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref UiBuildRunner
+            InputArtifacts:
+              - Name: SourceCode
+            OutputArtifacts:
+              - Name: uiBuildOutput
+              - Name: urlBuildOutput
+            RunOrder: 1
 
 Outputs:
   PipelineName:
