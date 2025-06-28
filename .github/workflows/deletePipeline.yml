@@ -1,0 +1,19 @@
+name: Delete pipeline
+on:
+  workflow_dispatch: {}
+  pull_request:
+      types:
+          - closed
+jobs:
+  DeletePipelineLamda:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Invoke delete pipeline step function
+      run: |
+        aws stepfunctions start-execution \
+          --state-machine-arn arn:aws:states:us-east-1:625961017727:stateMachine:DeleteLambdaStateMachine \
+          --input '{ "BranchName": "${{ github.head_ref || github.ref_name }}" }'
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: 'us-east-1'
