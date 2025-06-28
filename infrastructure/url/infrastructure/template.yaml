@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: The Game Checker site infrastructure
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: DoIOwnThatGame.com
+  HostedZoneId:
+    Type: String
+    Default: Z097947Z02241462DXLIC7B4J76X4E2LBKBWMAJBG
+  CloudFrontCert:
+    Type: String
+    Default: arn:aws:acm:us-east-1:625961017727:certificate/e71418d0-57a4-4c7d-983e-ba438da28bfd
+  Domain:
+    Type: String
+    AllowedPattern: (.*[.])*DoIOwnThatGame.com
+  BranchName:
+    Type: String
+
+Mappings:
+  AliasMap:
+    staging:
+      Alias: staging.DoIOwnThatGame.com
+    production:
+      Alias: DoIOwnThatGame.com
+
+Resources:
+  ##################### CloudFront
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'CloudFront OAI from ${Domain}'
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Sub '${BranchName}.${DomainName}'
+        Origins:
+          - DomainName: !ImportValue UiBucketDomainName
+            Id: ui-bucket
+            OriginPath: !Sub '/${BranchName}'
+            S3OriginConfig:
+              OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref CloudFrontOAI]]
+        DefaultRootObject: index.html
+        Enabled: true
+        IPV6Enabled: true
+        DefaultCacheBehavior:
+          Compress: true
+          TargetOriginId: ui-bucket
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: none
+        HttpVersion: http2
+        Comment: The Game Checker cloud front distribution
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CloudFrontCert
+          MinimumProtocolVersion: TLSv1.1_2016
+          SslSupportMethod: sni-only
+
+  ##################### DNS
+  DnsName:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      RecordSets:
+      - Name: !Ref Domain
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          EvaluateTargetHealth: false
+
+  ##################### Bucket
+  UiBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue UiBucketName
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Sub
+              - "${BucketArn}/*"
+              - BucketArn: !ImportValue UiBucketArn
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId

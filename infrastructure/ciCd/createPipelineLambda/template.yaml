@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Create infrastructure for branch deployments
+
+Resources:
+  CreatePipelineLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CreatePipelineLambdaRole
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+      Policies:
+      - PolicyName: create-pipeline-lambda-policy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+              - iam:*
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/game-checker-roles-*"
+          - Effect: Allow
+            Action:
+              - codebuild:DeleteProject
+            Resource: !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/game-checker-*"
+          - Effect: Allow
+            Action:
+              - codepipeline:*
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - codestar-connections:PassConnection
+            Resource: !Sub "arn:aws:codestar-connections:us-east-2:${AWS::AccountId}:connection/*"
+      
+  CreatePipelineLamda:
+   Type: AWS::Serverless::Function
+   Properties:
+    FunctionName: CreatePipeline
+    Description: A lambda used to create stacks for lower environments
+    Handler: index.handler
+    Role: !GetAtt CreatePipelineLambdaRole.Arn
+    Runtime: nodejs18.x
+    CodeUri: dist
+    AutoPublishAlias: live
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref CreatePipelineLamda]]

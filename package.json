@@ -4,12 +4,36 @@
   "description": "An application to check what games you own",
   "main": "index.js",
   "scripts": {
-    "build:ui": "cd ./ui && npm run build && cd ",
-    "deploy:bucket": "sam build -t ./infrastructure/codeRepoBucket/template.yaml && cd ./infrastructure/codeRepoBucket/ && sam deploy && cd ",
-    "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
-    "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
-    "install:ui": "cd ./ui && npm install && cd ",
-    "test:ui": "cd ./ui && npm test && cd "
+    "lint-all": "prettier --check packages/**/**/*.ts && prettier --check packages/**/**/*.json",
+    "install-all": "npm-run-all --parallel install:* && cd ../",
+
+    "install:ui": "npm-run-all --parallel install:ui:* && cd ../../",
+    "install:ui:ui": "cd ui && npm i",
+    "install:ui:url": "cd infrastructure/url && npm i",
+
+    "build-all": "npm-run-all --parallel build:* && cd ../",
+
+    "build:ui": "npm-run-all --parallel build:ui:* && cd ../../",
+    "build:ui:ui": "cd ui && npm run build",
+    "build:ui:url": "cd infrastructure/url && npm run build",
+
+    "build:api": "npm-run-all --parallel build:api:* && cd ../",
+    "build:api:api": "cd api && npm run build",
+
+    "build:data": "npm-run-all --parallel build:data:* && cd ../",
+    "build:data:processing": "cd processing && npm run build",
+
+    "test-all": "npm-run-all --parallel test:*",
+
+    "package-all": "npm-run-all --parallel package:*",
+
+    "package:ui": "npm-run-all --parallel package:ui:* && cd ../",
+    "package:ui:edge": "cd infrastructure/url && npm run package",
+
+    "package:api": "npm-run-all --parallel package:api:* && cd ../",
+    "package:api:api": "cd api && npm run package",
+    "package:api:api-gateway": "cd infrastructure/apiGateway && npm run package",
+    "package:api:api-gateway-deployment": "cd infrastructure/apiGatewayDeployment && npm run package"
   },
   "author": "Evan Johnson",
   "license": "MIT",

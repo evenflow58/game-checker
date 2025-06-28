@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo Installing base packages
+      - npm i
+
+      - echo Installing API packages
+      - npm run install:api
+  build:
+    commands:
+      - echo Build started for API
+      - npm run build:api
+  post_build:
+    commands:
+      - echo Testing API
+      # - npm run test:ui
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+
+artifacts:
+  files:
+    - '**/*'
+  name: game-checker-api

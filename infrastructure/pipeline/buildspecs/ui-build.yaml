@@ -25,5 +25,13 @@ cache:
 
 artifacts:
   files:
-    - '**/*'
-  name: game-checker-$(date +%Y-%m-%d)
+    - '*'
+  secondary-artifacts:
+    uiBuildOutput:
+      base-directory: ui/www
+      files:
+        - '**/*'
+    urlBuildOutput:
+      base-directory: infrastructure/url
+      files:
+        - '**/*'

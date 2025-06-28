@@ -1,0 +1,18 @@
+{
+  "name": "authorizer",
+  "version": "1.0.0",
+  "description": "The authorizer for the Game Checker API",
+  "license": "MIT",
+  "author": "Evan Johnson",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.150"
+  },
+  "dependencies": {
+    "google-auth-library": "^10.1.0"
+  }
+}
