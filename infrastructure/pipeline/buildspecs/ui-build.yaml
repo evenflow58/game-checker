@@ -12,7 +12,7 @@ phases:
       - npm run install:ui
 
       - echo Installing chrome for testing
-      - apt-get update && apt-get install -y google-chrome-stable
+      - apt-get install missing-package
   build:
     commands:
       - echo Build started for ui
