@@ -16,8 +16,11 @@ phases:
       - npm run build:ui
   post_build:
     commands:
+      - echo Installing chrome for testing
+      - apt-get update && apt-get install -y google-chrome-stable
+
       - echo Testing UI
-      # - npm run test:ui
+      - npm run test:ui
 
 cache:
   paths:
@@ -25,5 +28,14 @@ cache:
 
 artifacts:
   files:
-    - '**/*'
-  name: game-checker-$(date +%Y-%m-%d)
+    - '*'
+  secondary-artifacts:
+    uiBuildOutput:
+      # name: game-checker-$(date +%Y-%m-%d)
+      base-directory: ui/www
+      files:
+        - '**/*'
+    # urlBuildOutput:
+    #   base-directory: infrastructure/url
+    #   files:
+    #     - '**/*'
