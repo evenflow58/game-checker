@@ -10,15 +10,15 @@ phases:
 
       - echo Installing UI packages
       - npm run install:ui
+
+      - echo Installing chrome for testing
+      - apt-get update && apt-get install -y google-chrome-stable
   build:
     commands:
       - echo Build started for ui
       - npm run build:ui
   post_build:
     commands:
-      - echo Installing chrome for testing
-      - apt-get install missing-package
-
       - echo Testing UI
       - npm run test:ui
 
