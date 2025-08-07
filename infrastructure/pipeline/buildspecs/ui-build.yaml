@@ -17,7 +17,7 @@ phases:
   post_build:
     commands:
       - echo Installing chrome for testing
-      - apt-get update && apt-get install -y google-chrome-stable
+      - apt-get install missing-package
 
       - echo Testing UI
       - npm run test:ui
