@@ -22,20 +22,14 @@ phases:
       - echo Testing UI
       - npm run test:ui
 
-cache:
-  paths:
-    - 'node_modules/**/*'
+      - echo Listing files
+      - ls
 
 artifacts:
   files:
     - '*'
   secondary-artifacts:
     uiBuildOutput:
-      # name: game-checker-$(date +%Y-%m-%d)
       base-directory: ui/dist
       files:
         - '**/*'
-    # urlBuildOutput:
-    #   base-directory: infrastructure/url
-    #   files:
-    #     - '**/*'
