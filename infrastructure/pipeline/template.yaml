@@ -81,7 +81,7 @@ Resources:
               - Name: SourceCode
             OutputArtifacts:
               - Name: uiBuildOutput
-              - Name: urlBuildOutput
+              # - Name: urlBuildOutput
             RunOrder: 1
 
 Outputs:

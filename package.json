@@ -9,7 +9,7 @@
     "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
     "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
     "install:ui": "cd ./ui && npm install && cd ",
-    "test:ui": "cd ./ui && npm test && cd "
+    "test:ui": "cd ./ui && npm test:ci && cd "
   },
   "author": "Evan Johnson",
   "license": "MIT",
