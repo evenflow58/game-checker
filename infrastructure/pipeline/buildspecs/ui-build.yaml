@@ -32,7 +32,7 @@ artifacts:
   secondary-artifacts:
     uiBuildOutput:
       # name: game-checker-$(date +%Y-%m-%d)
-      base-directory: ui/www
+      base-directory: ui/dist
       files:
         - '**/*'
     # urlBuildOutput:
