@@ -26,6 +26,8 @@ phases:
       - echo Testing UI
       - npm run test:ui
 
+      - echo Testing Finished
+
 artifacts:
   files:
     - '*'
