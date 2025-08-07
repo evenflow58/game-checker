@@ -11,7 +11,7 @@ phases:
       - apt-get update
       - apt-get install -y google-chrome-stable
       - google-chrome --version
-      
+
       - echo Installing base packages
       - npm i
 
@@ -25,9 +25,6 @@ phases:
     commands:
       - echo Testing UI
       - npm run test:ui
-
-      - echo Listing files
-      - ls
 
 artifacts:
   files:
