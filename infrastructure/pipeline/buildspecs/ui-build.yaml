@@ -27,7 +27,7 @@ phases:
       - npm run test:ui
 
       - echo Testing Finished
-      - echo pwd
+      - pwd
 
 artifacts:
   files:
