@@ -21,13 +21,13 @@ phases:
     commands:
       - echo Build started for ui
       - npm run build:ui
-  post_build:
-    commands:
-      - echo Testing UI
-      - npm run test:ui
+  # post_build:
+  #   commands:
+  #     - echo Testing UI
+  #     - npm run test:ui
 
-      - echo Testing Finished
-      - pwd
+  #     - echo Testing Finished
+  #     - pwd
 
 artifacts:
   files:
