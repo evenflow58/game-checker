@@ -33,6 +33,6 @@ artifacts:
     - '*'
   secondary-artifacts:
     uiBuildOutput:
-      base-directory: ui/dist
+      base-directory: ui/dist/game-checker-ui
       files:
         - '**/*'
