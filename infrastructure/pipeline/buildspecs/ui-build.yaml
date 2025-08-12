@@ -27,13 +27,15 @@ phases:
       - npm run test:ui
 
       - echo Testing Finished
+      - cd $CODEBUILD_SRC_DIR
       - pwd
+      - ls -l
 
 artifacts:
   files:
-    - '*'
+    - '**/*'
   secondary-artifacts:
     uiBuildOutput:
-      base-directory: ui/dist/game-checker-ui
+      base-directory: $CODEBUILD_SRC_DIR/ui/dist/game-checker-ui
       files:
         - '**/*'
