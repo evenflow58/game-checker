@@ -32,8 +32,9 @@ phases:
       # - ls
 
 artifacts:
+  base-directory: ui/dist/game-checker-ui
   files:
-    - ui/dist/game-checker-ui/**/*
+    - '**/*'
   secondary-artifacts:
     uiBuildOutput:
       files:
