@@ -27,15 +27,15 @@ phases:
       - npm run test:ui
 
       - echo Testing Finished
-      - cd ui/dist/game-checker-ui
-      - pwd
-      - ls
+      # - cd ui
+      # - pwd
+      # - ls
 
 artifacts:
   files:
     - '*'
   secondary-artifacts:
     uiBuildOutput:
-      base-directory: ui/dist
+      base-directory: ui
       files:
         - '**/*'
