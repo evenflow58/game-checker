@@ -27,15 +27,15 @@ phases:
       - npm run test:ui
 
       - echo Testing Finished
-      - cd $CODEBUILD_SRC_DIR/ui/dist/game-checker-ui
+      - cd ui/dist/game-checker-ui
       - pwd
-      - ls -l
+      - ls
 
 artifacts:
   files:
     - '**/*'
   secondary-artifacts:
     uiBuildOutput:
-      base-directory: $CODEBUILD_SRC_DIR/ui/dist/game-checker-ui
+      base-directory: 'ui/dist/game-checker-ui'
       files:
-        - '**/*'
+        - 'prerendered-routes.json'
