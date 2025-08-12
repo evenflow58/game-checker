@@ -33,9 +33,9 @@ phases:
 
 artifacts:
   files:
-    - '*'
+    - ui/dist/game-checker-ui
   secondary-artifacts:
     uiBuildOutput:
-      base-directory: ui
+      base-directory: browser
       files:
         - '**/*'
