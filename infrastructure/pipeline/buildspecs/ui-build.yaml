@@ -33,7 +33,7 @@ phases:
 
 artifacts:
   files:
-    - '**/*'
+    - '*'
   secondary-artifacts:
     uiBuildOutput:
       base-directory: 'ui/dist/game-checker-ui'
