@@ -27,7 +27,7 @@ phases:
       - npm run test:ui
 
       - echo Testing Finished
-      - cd $CODEBUILD_SRC_DIR
+      - cd $CODEBUILD_SRC_DIR/ui/dist/game-checker-ui
       - pwd
       - ls -l
 
