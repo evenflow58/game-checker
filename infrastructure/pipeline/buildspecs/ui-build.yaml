@@ -37,4 +37,4 @@ artifacts:
   secondary-artifacts:
     uiBuildOutput:
       files:
-        - game-checker-ui/**/*
+        - '**/*'
