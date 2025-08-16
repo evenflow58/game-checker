@@ -24,6 +24,8 @@ phases:
 
       - echo "packaging packages"
       - npm run package:ui
+
+      - ls
   post_build:
     commands:
       - echo Testing UI
