@@ -21,21 +21,25 @@ phases:
     commands:
       - echo Build started for ui
       - npm run build:ui
+
+      - echo "packaging packages"
+      - npm run package:ui
   post_build:
     commands:
       - echo Testing UI
       - npm run test:ui
 
       - echo Testing Finished
-      # - cd ui
-      # - pwd
-      # - ls
 
 artifacts:
-  base-directory: ui/dist/game-checker-ui
   files:
-    - '**/*'
+    - '*'
   secondary-artifacts:
     uiBuildOutput:
+      base-directory: ui/dist/game-checker-ui
+      files:
+        - '**/*'
+    urlBuildOutput:
+      base-directory: infrastructure/url
       files:
         - '**/*'

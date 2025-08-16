@@ -81,23 +81,28 @@ Resources:
               - Name: SourceCode
             OutputArtifacts:
               - Name: uiBuildOutput
-              # - Name: urlBuildOutput
+              - Name: urlBuildOutput
             RunOrder: 1
         - Name: Deploy
           Actions:
-            - Name: DeployUiCode
+            - Name: DeployUrl
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
-                Provider: S3
+                Provider: CloudFormation
                 Version: 1
-              Configuration:
-                BucketName: !ImportValue UiBucketName
-                Extract: true
-                ObjectKey: !If [IsProduction, 'master', !Ref GitHubBranch]
               InputArtifacts:
-                - Name: uiBuildOutput
-              Region: us-east-1
+                - Name: urlBuildOutput
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !ImportValue CloudFormationExecutionRoleArn
+                TemplatePath: urlBuildOutput::infrastructure/template.package.yaml
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                StackName: !Sub ["${Prefix}Stack-Stack-Url", { "Prefix": !Ref Prefix }]
+                ParameterOverrides: !Sub
+                  - '{ "Domain": "${Domain}", "BranchName": "${BranchName}" }'
+                  - Domain: !If [IsProduction, 'doiownthatgame.com', !Sub '${GitHubBranch}.doiownthatgame.com']
+                    BranchName: !Ref GitHubBranch
               RunOrder: 1
 
 Outputs:

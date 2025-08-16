@@ -1,0 +1,23 @@
+{
+    "name": "lambda-at-edge",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "build": "tsc && cp -r node_modules dist",
+      "deploy": "npm run build && npm run copy && cd ./infrastructure && sam build && sam deploy --capabilities CAPABILITY_NAMED_IAM",
+      "package": "sam package --template-file ./infrastructure/template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./infrastructure/template.package.yaml",
+      "copy": "Xcopy \"node_modules\" \"dist\\node_modules\" /E/H/C/I/Y",
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+      "@types/node": "^18.7.19",
+      "ts-node": "^10.9.1",
+      "typescript": "^4.8.3"
+    },
+    "dependencies": {
+      "@aws-sdk/client-s3": "^3.181.0"
+    }
+  }
