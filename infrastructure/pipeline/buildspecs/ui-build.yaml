@@ -26,6 +26,8 @@ phases:
       - npm run package:ui
 
       - ls
+      - cd ui
+      - ls
   post_build:
     commands:
       - echo Testing UI
