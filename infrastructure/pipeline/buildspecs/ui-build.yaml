@@ -12,9 +12,9 @@ phases:
       - apt-get install -y google-chrome-stable
       - google-chrome --version
 
-      - echo Installing typscript
-      - npm install -g typescript
-      - export PATH=$PATH:$(npm bin -g) # Add global npm bin to PATH
+      # - echo Installing typscript
+      # - npm install -g typescript
+      # - export PATH=$PATH:$(npm bin -g) # Add global npm bin to PATH
 
       - echo Installing base packages
       - npm i

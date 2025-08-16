@@ -15,7 +15,9 @@
     "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
     "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
 
-    "install:ui": "cd ./ui && npm install && cd ",
+    "install:ui": "npm-run-all --parallel install:ui:* && cd ../../",
+    "install:ui:ui": "cd ui && npm i",
+    "install:ui:url": "cd infrastructure/url && npm i",
 
     "build-all": "npm-run-all --parallel build:* && cd ../",
 
