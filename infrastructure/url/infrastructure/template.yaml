@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The 40k Auspex site infrastructure
+Description: The game checker site infrastructure
 
 Parameters:
   DomainName:
@@ -8,7 +8,7 @@ Parameters:
     Default: doiownthatgame.com
   HostedZoneId:
     Type: String
-    Default: Z0979474E2LBKBWMAJBG
+    Default: Z02241462DXLIC7B4J76X
   CloudFrontCert:
     Type: String
     Default: arn:aws:acm:us-east-1:625961017727:certificate/2ef1c217-f0cc-4453-aeff-5bb07bf1c056
@@ -21,9 +21,9 @@ Parameters:
 Mappings:
   AliasMap:
     staging:
-      Alias: staging.40kauspex.com
+      Alias: staging.doiownthatgame.com
     production:
-      Alias: 40kauspex.com
+      Alias: doiownthatgame.com
 
 Resources:
   ##################### CloudFront
@@ -57,7 +57,7 @@ Resources:
             Cookies:
               Forward: none
         HttpVersion: http2
-        Comment: The 40k Auspex cloud front distribution
+        Comment: The game checker cloud front distribution
         ViewerCertificate:
           AcmCertificateArn: !Ref CloudFrontCert
           MinimumProtocolVersion: TLSv1.1_2016
