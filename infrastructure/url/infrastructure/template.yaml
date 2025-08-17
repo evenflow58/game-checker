@@ -5,16 +5,16 @@ Description: The 40k Auspex site infrastructure
 Parameters:
   DomainName:
     Type: String
-    Default: 40kauspex.com
+    Default: doiownthatgame.com
   HostedZoneId:
     Type: String
     Default: Z0979474E2LBKBWMAJBG
-  CloudFronCert:
+  CloudFrontCert:
     Type: String
-    Default: arn:aws:acm:us-east-1:625961017727:certificate/5be7a1f8-2259-4172-bb5e-00cbeb10d53d
+    Default: arn:aws:acm:us-east-1:625961017727:certificate/2ef1c217-f0cc-4453-aeff-5bb07bf1c056
   Domain:
     Type: String
-    AllowedPattern: (.*[.])*40kauspex.com
+    AllowedPattern: (.*[.])*doiownthatgame.com
   BranchName:
     Type: String
 
@@ -59,7 +59,7 @@ Resources:
         HttpVersion: http2
         Comment: The 40k Auspex cloud front distribution
         ViewerCertificate:
-          AcmCertificateArn: !Ref CloudFronCert
+          AcmCertificateArn: !Ref CloudFrontCert
           MinimumProtocolVersion: TLSv1.1_2016
           SslSupportMethod: sni-only
 
