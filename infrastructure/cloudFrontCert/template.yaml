@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The game checker cloud front certificate
+
+Parameters:
+  HostedZoneId:
+    Type: String
+    Description: The hosted zone the urls should exist in
+    Default: Z02241462DXLIC7B4J76X
+
+Resources:
+  MultiSANCert:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: "*.doiownthatgame.com"
+      SubjectAlternativeNames:
+        - "doiownthatgame.com"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: "doiownthatgame.com"
+          HostedZoneId: !Ref HostedZoneId
+
+Outputs:
+  CloudFrontCertArn:
+    Value: !Ref MultiSANCert
+    Description: The ARN of the CloudFrontCert for the Game Checker appliation.
+    Export:
+      Name: CloudFrontCertArn

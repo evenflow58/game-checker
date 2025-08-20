@@ -11,7 +11,7 @@ Parameters:
     Default: Z02241462DXLIC7B4J76X
   CloudFrontCert:
     Type: String
-    Default: arn:aws:acm:us-east-1:625961017727:certificate/2ef1c217-f0cc-4453-aeff-5bb07bf1c056
+    Default: arn:aws:acm:us-east-1:625961017727:certificate/101e1182-75a4-407d-b4fc-9e980a6e7241
   Domain:
     Type: String
     AllowedPattern: (.*[.])*doiownthatgame.com
