@@ -9,9 +9,6 @@ Parameters:
   HostedZoneId:
     Type: String
     Default: Z02241462DXLIC7B4J76X
-  CloudFrontCert:
-    Type: String
-    Default: !ImportValue CloudFrontCertArn
   Domain:
     Type: String
     AllowedPattern: (.*[.])*doiownthatgame.com
@@ -59,7 +56,7 @@ Resources:
         HttpVersion: http2
         Comment: The game checker cloud front distribution
         ViewerCertificate:
-          AcmCertificateArn: !Ref CloudFrontCert
+          AcmCertificateArn: !ImportValue CloudFrontCertArn
           MinimumProtocolVersion: TLSv1.1_2016
           SslSupportMethod: sni-only
 
