@@ -104,6 +104,20 @@ Resources:
                   - Domain: !If [IsProduction, 'doiownthatgame.com', !Sub '${GitHubBranch}.doiownthatgame.com']
                     BranchName: !Ref GitHubBranch
               RunOrder: 1
+            - Name: DeployUiCode
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: S3
+                Version: 1
+              Configuration:
+                BucketName: !ImportValue UiBucketName
+                Extract: true
+                ObjectKey: !If [IsProduction, 'master', !Ref GitHubBranch]
+              InputArtifacts:
+                - Name: uiBuildOutput
+              Region: us-east-1
+              RunOrder: 2
 
 Outputs:
   PipelineName:

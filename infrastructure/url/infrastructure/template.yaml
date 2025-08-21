@@ -42,7 +42,7 @@ Resources:
             OriginPath: !Sub '/${BranchName}'
             S3OriginConfig:
               OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref CloudFrontOAI]]
-        DefaultRootObject: index.html
+        DefaultRootObject: browser/index.html
         Enabled: true
         IPV6Enabled: true
         DefaultCacheBehavior:
