@@ -47,25 +47,28 @@ jobs:
         run: |
           set -e
 
-          # Deploy the stack (creates a change set if stack exists)
-          aws cloudformation deploy \
-            --template-file infrastructure/pipeline/template.yaml \
+          # Create change set
+          aws cloudformation create-change-set \
             --stack-name $STACK_NAME \
+            --template-body file://infrastructure/pipeline/template.yaml \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-            --parameter-overrides \
-              GitHubBranch=$BRANCH_NAME \
-              GitHubRepo=$GITHUB_REPOSITORY \
-              Prefix=$PREFIX
+            --change-set-name "changeset-$GITHUB_RUN_ID" \
+            --parameters ParameterKey=GitHubBranch,ParameterValue=$BRANCH_NAME \
+                        ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
+                        ParameterKey=Prefix,ParameterValue=$PREFIX
 
-          # Detect any pending change sets
-          CHANGE_SET=$(aws cloudformation list-change-sets --stack-name $STACK_NAME \
-            --query 'Summaries[0].ChangeSetName' --output text)
+          # Wait for change set to be created
+          aws cloudformation wait change-set-create-complete \
+            --stack-name $STACK_NAME \
+            --change-set-name "changeset-$GITHUB_RUN_ID"
 
-          if [[ "$CHANGE_SET" != "None" ]]; then
-            echo "Executing pending change set $CHANGE_SET"
-            aws cloudformation execute-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET
-            aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
-          fi
+          # Execute change set
+          aws cloudformation execute-change-set \
+            --stack-name $STACK_NAME \
+            --change-set-name "changeset-$GITHUB_RUN_ID"
+
+          # Wait for stack creation/update to complete
+          aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
 
       # 6️⃣ Trigger ephemeral pipeline
       - name: Trigger ephemeral pipeline
