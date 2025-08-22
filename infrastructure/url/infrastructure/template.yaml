@@ -24,11 +24,21 @@ Mappings:
 
 Resources:
   ##################### CloudFront
-  CloudFrontOAI:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  # CloudFrontOAI:
+  #   Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  #   Properties:
+  #     CloudFrontOriginAccessIdentityConfig:
+  #       Comment: !Sub 'CloudFront OAI from ${Domain}'
+
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
     Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub 'CloudFront OAI from ${Domain}'
+      OriginAccessControlConfig:
+        Name: DoIOwnThatGameOAC
+        Description: !Sub 'CloudFront OAC from ${Domain}'
+        SigningBehavior: always
+        SigningProtocol: sigv4
+        OriginAccessControlOriginType: s3
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
@@ -40,8 +50,9 @@ Resources:
           - DomainName: !ImportValue UiBucketDomainName
             Id: ui-bucket
             OriginPath: !Sub '/${BranchName}'
-            S3OriginConfig:
-              OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref CloudFrontOAI]]
+            OriginAccessControlId: !GetAtt CloudFrontOAC.Id
+            S3OriginConfig: {}
+              # OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref CloudFrontOAI]]
         DefaultRootObject: browser/index.html
         Enabled: true
         IPV6Enabled: true
@@ -49,6 +60,8 @@ Resources:
           Compress: true
           TargetOriginId: ui-bucket
           ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
           ForwardedValues:
             QueryString: true
             Cookies:
@@ -87,4 +100,8 @@ Resources:
               - "${BucketArn}/*"
               - BucketArn: !ImportValue UiBucketArn
             Principal:
-              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+              Service: cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+              # CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
