@@ -35,8 +35,8 @@ jobs:
             --stack-name $STACK_NAME \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides \
-              GitHubBranch=$BRANCH_NAME
-              GitHubRepo=$GITHUB_REPOSITORY
+              GitHubBranch=$BRANCH_NAME \
+              GitHubRepo=$GITHUB_REPOSITORY \
               Prefix=$(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
 
       - name: Trigger pipeline
