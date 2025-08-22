@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: The game checker site infrastructure
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: doiownthatgame.com
+  HostedZoneId:
+    Type: String
+    Default: Z02241462DXLIC7B4J76X
+  Domain:
+    Type: String
+    AllowedPattern: (.*[.])*doiownthatgame.com
+  BranchName:
+    Type: String
+
+Mappings:
+  AliasMap:
+    staging:
+      Alias: staging.doiownthatgame.com
+    production:
+      Alias: doiownthatgame.com
+
+Resources:
+  ##################### CloudFront
+  # CloudFrontOAI:
+  #   Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  #   Properties:
+  #     CloudFrontOriginAccessIdentityConfig:
+  #       Comment: !Sub 'CloudFront OAI from ${Domain}'
+
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: DoIOwnThatGameOAC
+        Description: !Sub 'CloudFront OAC from ${Domain}'
+        SigningBehavior: always
+        SigningProtocol: sigv4
+        OriginAccessControlOriginType: s3
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Sub '${BranchName}.${DomainName}'
+        Origins:
+          - DomainName: !ImportValue UiBucketDomainName
+            Id: ui-bucket
+            OriginPath: !Sub '/${BranchName}'
+            OriginAccessControlId: !GetAtt CloudFrontOAC.Id
+            S3OriginConfig: {}
+              # OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref CloudFrontOAI]]
+        DefaultRootObject: index.html
+        Enabled: true
+        IPV6Enabled: true
+        DefaultCacheBehavior:
+          Compress: true
+          TargetOriginId: ui-bucket
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: none
+        HttpVersion: http2
+        Comment: The game checker cloud front distribution
+        ViewerCertificate:
+          AcmCertificateArn: !ImportValue CloudFrontCertArn
+          MinimumProtocolVersion: TLSv1.1_2016
+          SslSupportMethod: sni-only
+
+  ##################### DNS
+  DnsName:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      RecordSets:
+      - Name: !Ref Domain
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          EvaluateTargetHealth: false
+
+  ##################### Bucket
+  UiBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue UiBucketName
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Sub
+              - "${BucketArn}/*"
+              - BucketArn: !ImportValue UiBucketArn
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+              # CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId

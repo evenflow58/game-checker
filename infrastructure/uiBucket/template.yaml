@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The Game Checker UI bucket
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: game-checker-ui
+
+Resources:
+  UiBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+Outputs:
+  UiBucketName:
+    Value: !Ref UiBucket
+    Description: The name of the UI bucket
+    Export:
+      Name: UiBucketName
+  UiBucketArn:
+    Value: !GetAtt UiBucket.Arn
+    Description: The arn of the UI bucket
+    Export:
+      Name: UiBucketArn
+  WebsiteURL:
+    Value: !GetAtt UiBucket.WebsiteURL
+    Description: URL for website hosted on S3
+    Export:
+      Name: WebsiteURL
+  UiBucketDomainName:
+    Value: !GetAtt UiBucket.DomainName
+    Description: The domain name of the UI bucket.
+    Export:
+      Name: UiBucketDomainName
+  S3BucketSecureURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt UiBucket.DomainName
+    Description: Name of S3 bucket to hold website content

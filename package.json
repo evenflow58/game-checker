@@ -3,13 +3,37 @@
   "version": "1.0.0",
   "description": "An application to check what games you own",
   "main": "index.js",
+  "devDependencies": {
+    "husky": "^4.2.5",
+    "npm-run-all": "^4.1.5",
+    "prettier": "2.0.5",
+    "pretty-quick": "^2.0.1"
+  },
   "scripts": {
-    "build:ui": "cd ./ui && npm run build && cd ",
     "deploy:bucket": "sam build -t ./infrastructure/codeRepoBucket/template.yaml && cd ./infrastructure/codeRepoBucket/ && sam deploy && cd ",
+    "deploy:uiBucket": "sam build -t ./infrastructure/uiBucket/template.yaml && cd ./infrastructure/uiBucket/ && sam deploy && cd ",
+    "deploy:cloudFrontCert": "sam build -t ./infrastructure/cloudFrontCert/template.yaml && cd ./infrastructure/cloudFrontCert/ && sam deploy && cd ",
     "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
     "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
-    "install:ui": "cd ./ui && npm install && cd ",
-    "test:ui": "cd ./ui && npm test && cd "
+
+    "install:ui": "npm-run-all --parallel install:ui:* && cd ../../",
+    "install:ui:ui": "cd ui && npm i",
+    "install:ui:url": "cd infrastructure/url && npm i",
+
+    "build-all": "npm-run-all --parallel build:* && cd ../",
+
+    "build:ui": "npm-run-all --parallel build:ui:* && cd ../../",
+    "build:ui:ui": "cd ui && npm run build",
+    "build:ui:url": "cd infrastructure/url && npm run build",
+
+    "package-all": "npm-run-all --parallel package:*",
+
+    "package:ui": "npm-run-all --parallel package:ui:* && cd ../",
+    "package:ui:edge": "cd infrastructure/url && npm run package",
+
+    "test-all": "npm-run-all --parallel test:*",
+
+    "test:ui": "cd ./ui && npm run test:ci && cd "
   },
   "author": "Evan Johnson",
   "license": "MIT",
