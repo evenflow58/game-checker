@@ -6,12 +6,17 @@ on:
       - "main"
       - "master"
   pull_request:
-    types: [closed]   # teardown when PR closes
+    types: [closed]  # teardown when PR closes
 
 jobs:
   ephemeral-env:
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2️⃣ Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -19,24 +24,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      # 3️⃣ Set environment variables
       - name: Set env vars
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
           echo "STACK_NAME=ephemeral-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          PREFIX=$(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+                   awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+          echo "PREFIX=$PREFIX" >> $GITHUB_ENV
 
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - run: ls -R infrastructure/pipeline
-
-      - name: Validate CFN template
+      # 4️⃣ Validate CloudFormation template
+      - name: Validate CloudFormation template
         run: |
-          aws cloudformation validate-template --template-body file://infrastructure/pipeline/template.yaml
+          aws cloudformation validate-template \
+            --template-body file://infrastructure/pipeline/template.yaml
 
-      - name: Create/Update stack
+      # 5️⃣ Deploy stack (create or update)
+      - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
-          PREFIX=$(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+          set -e
+          # Deploy the stack (creates a change set if stack exists)
           aws cloudformation deploy \
             --template-file infrastructure/pipeline/template.yaml \
             --stack-name $STACK_NAME \
@@ -46,18 +54,25 @@ jobs:
               GitHubRepo=$GITHUB_REPOSITORY \
               Prefix=$PREFIX
 
-      - name: List change sets
-        run: |
-          aws cloudformation list-change-sets --stack-name $STACK_NAME
+          # Check for any pending change set and execute it
+          CHANGE_SET=$(aws cloudformation list-change-sets --stack-name $STACK_NAME \
+            --query 'Summaries[0].ChangeSetName' --output text)
+          if [[ "$CHANGE_SET" != "None" ]]; then
+            echo "Executing pending change set $CHANGE_SET"
+            aws cloudformation execute-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET
+            aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+          fi
 
-      - name: Trigger pipeline
+      # 6️⃣ Trigger ephemeral pipeline
+      - name: Trigger ephemeral pipeline
         if: github.event_name == 'push'
         run: |
           PIPELINE_NAME="ephemeral-${BRANCH_NAME}-pipeline"
           aws codepipeline start-pipeline-execution --name $PIPELINE_NAME
 
+      # 7️⃣ Teardown ephemeral stack on PR close
       - name: Delete stack (teardown)
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
           aws cloudformation delete-stack --stack-name $STACK_NAME
-
+          aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
