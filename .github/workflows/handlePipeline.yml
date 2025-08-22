@@ -28,7 +28,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           aws cloudformation deploy \
-            --template-file infra/ephemeral-pipeline.yml \
+            --template-file infrastructure/ephemeral-pipeline.yml \
             --stack-name $STACK_NAME \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides BranchName=$BRANCH_NAME
