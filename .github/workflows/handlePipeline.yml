@@ -12,13 +12,9 @@ jobs:
   ephemeral-env:
     runs-on: ubuntu-latest
     steps:
-      # 1️⃣ Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - run: ls -R infrastructure/pipeline
-
-      # 2️⃣ Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -26,7 +22,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # 3️⃣ Set environment variables
       - name: Set env vars
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
@@ -35,47 +30,32 @@ jobs:
                    awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
           echo "PREFIX=$PREFIX" >> $GITHUB_ENV
 
-      # 4️⃣ Validate CloudFormation template
       - name: Validate CloudFormation template
         run: |
           aws cloudformation validate-template \
             --template-body file://infrastructure/pipeline/template.yaml
 
-      # 5️⃣ Deploy stack and explicitly execute change set
+      - name: Install SAM
+        uses: aws-actions/setup-sam@v2
+
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
           set -e
 
-          # Create change set
-          aws cloudformation create-change-set \
-            --stack-name $STACK_NAME \
-            --template-body file://infrastructure/pipeline/template.yaml \
+          sam build -t ./infrastructure/pipeline/template.yaml
+
+          sam deploy /
+            --region us-east-1
+            --resolve-s3
+            --s3_prefix game-checker-pipeline
+            --stack-name "$BRANCH_NAME-$GITHUB_REPOSITORY"
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-            --change-set-name "changeset-$GITHUB_RUN_ID" \
-            --parameters ParameterKey=GitHubBranch,ParameterValue=$BRANCH_NAME \
-                        ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
-                        ParameterKey=Prefix,ParameterValue=$PREFIX
-
-          # Wait for change set to be created
-          aws cloudformation wait change-set-create-complete \
-            --stack-name $STACK_NAME \
-            --change-set-name "changeset-$GITHUB_RUN_ID"
-
-          # Execute change set
-          aws cloudformation execute-change-set \
-            --stack-name $STACK_NAME \
-            --change-set-name "changeset-$GITHUB_RUN_ID"
-
-          # Wait for stack creation/update to complete
-          aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
-
-      # 6️⃣ Trigger ephemeral pipeline
-      - name: Trigger ephemeral pipeline
-        if: github.event_name == 'push'
-        run: |
-          PIPELINE_NAME="ephemeral-${BRANCH_NAME}-pipeline"
-          aws codepipeline start-pipeline-execution --name $PIPELINE_NAME
+            --no-confirm-changeset
+            --parameter-overrides \
+                ParameterKey=GitHubBranch,ParameterValue=$BRANCH_NAME \
+                ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
+                ParameterKey=Prefix,ParameterValue=$PREFIX
 
       # 7️⃣ Teardown ephemeral stack on PR close
       - name: Delete stack (teardown)
