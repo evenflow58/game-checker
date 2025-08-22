@@ -30,14 +30,15 @@ jobs:
       - name: Create/Update stack
         if: github.event_name == 'push'
         run: |
+          PREFIX=$(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
           aws cloudformation deploy \
             --template-file infrastructure/pipeline/template.yaml \
             --stack-name $STACK_NAME \
-            --capabilities CAPABILITY_NAMED_IAM \
+            --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
             --parameter-overrides \
               GitHubBranch=$BRANCH_NAME \
               GitHubRepo=$GITHUB_REPOSITORY \
-              Prefix=$(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+              Prefix=$PREFIX
 
       - name: Trigger pipeline
         if: github.event_name == 'push'
@@ -50,3 +51,7 @@ jobs:
         run: |
           aws cloudformation delete-stack --stack-name $STACK_NAME
 
+      - name: Debug CFN failure
+        if: failure()
+        run: |
+          aws cloudformation describe-stack-events --stack-name $STACK_NAME --max-items 10
