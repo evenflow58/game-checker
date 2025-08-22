@@ -53,7 +53,7 @@ Resources:
             OriginAccessControlId: !GetAtt CloudFrontOAC.Id
             S3OriginConfig: {}
               # OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref CloudFrontOAI]]
-        DefaultRootObject: browser/index.html
+        DefaultRootObject: index.html
         Enabled: true
         IPV6Enabled: true
         DefaultCacheBehavior:

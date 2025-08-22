@@ -36,7 +36,7 @@ artifacts:
     - '*'
   secondary-artifacts:
     uiBuildOutput:
-      base-directory: ui/dist/game-checker-ui
+      base-directory: ui/dist/game-checker-ui/browser
       files:
         - '**/*'
     urlBuildOutput:
