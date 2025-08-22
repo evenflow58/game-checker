@@ -16,6 +16,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - run: ls -R infrastructure/pipeline
+
       # 2️⃣ Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -39,11 +41,12 @@ jobs:
           aws cloudformation validate-template \
             --template-body file://infrastructure/pipeline/template.yaml
 
-      # 5️⃣ Deploy stack (create or update)
+      # 5️⃣ Deploy stack and explicitly execute change set
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
           set -e
+
           # Deploy the stack (creates a change set if stack exists)
           aws cloudformation deploy \
             --template-file infrastructure/pipeline/template.yaml \
@@ -54,9 +57,10 @@ jobs:
               GitHubRepo=$GITHUB_REPOSITORY \
               Prefix=$PREFIX
 
-          # Check for any pending change set and execute it
+          # Detect any pending change sets
           CHANGE_SET=$(aws cloudformation list-change-sets --stack-name $STACK_NAME \
             --query 'Summaries[0].ChangeSetName' --output text)
+
           if [[ "$CHANGE_SET" != "None" ]]; then
             echo "Executing pending change set $CHANGE_SET"
             aws cloudformation execute-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET
