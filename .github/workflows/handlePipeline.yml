@@ -24,6 +24,9 @@ jobs:
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
           echo "STACK_NAME=ephemeral-${GITHUB_REF_NAME}" >> $GITHUB_ENV
 
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Create/Update stack
         if: github.event_name == 'push'
         run: |
