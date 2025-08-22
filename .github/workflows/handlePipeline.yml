@@ -27,6 +27,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - run: ls -R infrastructure/pipeline
+
+      - name: Validate CFN template
+        run: |
+          aws cloudformation validate-template --template-body file://infrastructure/pipeline/template.yaml
+
       - name: Create/Update stack
         if: github.event_name == 'push'
         run: |
@@ -40,6 +46,10 @@ jobs:
               GitHubRepo=$GITHUB_REPOSITORY \
               Prefix=$PREFIX
 
+      - name: List change sets
+        run: |
+          aws cloudformation list-change-sets --stack-name $STACK_NAME
+
       - name: Trigger pipeline
         if: github.event_name == 'push'
         run: |
@@ -50,9 +60,3 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
           aws cloudformation delete-stack --stack-name $STACK_NAME
-
-      - name: Debug CFN failure
-        if: failure()
-        run: |
-          aws cloudformation describe-stack-events --stack-name $STACK_NAME --max-items 10
-
