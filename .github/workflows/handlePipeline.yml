@@ -11,15 +11,20 @@ on:
 env:
   STACK_NAME: ephemeral-${GITHUB_REF_NAME}
   BRANCH_NAME: ${GITHUB_REF_NAME}
-  PREFIX: $(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
-          awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
-
+  
 jobs:
   ephemeral-env:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Compute PREFIX ENV variable from repo name
+        id: compute-prefix
+        run: |
+          PREFIX=$(echo "${GITHUB_REPOSITORY}" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+            awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+          echo "PREFIX=$PREFIX" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -39,6 +44,8 @@ jobs:
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
+          echo "${PREFIX}"
+          
           sam build -t ./infrastructure/pipeline/template.yaml
 
           sam deploy \
@@ -51,7 +58,7 @@ jobs:
             --parameter-overrides \
                 ParameterKey=GitHubBranch,ParameterValue=${{ env.BRANCH_NAME }} \
                 ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
-                ParameterKey=Prefix,ParameterValue=${{ env.PREFIX }}
+                ParameterKey=Prefix,ParameterValue=${PREFIX}
 
       # - name: Delete stack (teardown)
       #   if: github.event_name == 'pull_request' && github.event.action == 'closed'
