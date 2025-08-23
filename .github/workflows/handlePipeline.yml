@@ -31,7 +31,7 @@ jobs:
       - name: Compute PREFIX ENV variable from repo name
         id: compute-prefix
         run: |
-          PREFIX=$(echo "${GITHUB_REPOSITORY}" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+          PREFIX=$(echo "${BRANCH_NAME}" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
             awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
           echo "PREFIX=$PREFIX" >> $GITHUB_ENV
           echo "REPO_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_ENV
