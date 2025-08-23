@@ -54,7 +54,7 @@ jobs:
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
-          echo "${PREFIX}"
+          echo "${{ env.PREFIX }}"
 
           sam build -t ./infrastructure/pipeline/template.yaml
 
@@ -69,7 +69,7 @@ jobs:
             --parameter-overrides \
                 ParameterKey=GitHubBranch,ParameterValue=${{ env.BRANCH_NAME }} \
                 ParameterKey=GitHubRepo,ParameterValue=$REPO_NAME \
-                ParameterKey=Prefix,ParameterValue=${PREFIX}
+                ParameterKey=Prefix,ParameterValue=${{ env.PREFIX }}
 
       - name: Run pipeline
         if: github.event_name == 'push'
@@ -119,15 +119,15 @@ jobs:
 
       - name: Delete all ephemeral stacks
         run: |
-          echo "Looking for stacks with prefix: $PREFIX"
+          echo "Looking for stacks with prefix: ${{ env.PREFIX }}"
 
           STACKS=$(aws cloudformation list-stacks \
             --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
-            --query "StackSummaries[?starts_with(StackName, \`${PREFIX}\`)].StackName" \
+            --query "StackSummaries[?starts_with(StackName, \`${{ env.PREFIX }}\`)].StackName" \
             --output text)
 
           if [ -z "$STACKS" ]; then
-            echo "No stacks found with prefix $PREFIX"
+            echo "No stacks found with prefix ${{ env.PREFIX }}"
             exit 0
           fi
 
