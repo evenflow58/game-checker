@@ -1,0 +1,152 @@
+name: Ephemeral Environment
+
+on:
+  push:
+    branches-ignore:
+      - "main"
+      - "master"
+  pull_request:
+    types: [closed]
+  workflow_dispatch:  # 👈 allows manual trigger
+    inputs:
+      branch:
+        description: "Branch to deploy"
+        required: true
+      teardown_only:
+        description: "Run only the teardown step?"
+        required: false
+        default: "false"
+
+env:
+  STACK_NAME: ephemeral-${{ github.event.inputs.branch || github.ref_name }}
+  BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name }}
+  
+jobs:
+  ephemeral-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Compute PREFIX ENV variable from repo name
+        id: compute-prefix
+        run: |
+          PREFIX=$(echo "${GITHUB_REPOSITORY}" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+            awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+          echo "PREFIX=$PREFIX" >> $GITHUB_ENV
+          echo "REPO_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Validate CloudFormation template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://infrastructure/pipeline/template.yaml
+
+      - name: Install SAM
+        uses: aws-actions/setup-sam@v2
+
+      - name: Deploy CloudFormation stack
+        if: github.event_name == 'push'
+        run: |
+          echo "${PREFIX}"
+
+          sam build -t ./infrastructure/pipeline/template.yaml
+
+          sam deploy \
+            --region us-east-1 \
+            --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-l9itovocker9 \
+            --s3-prefix game-checker-pipeline \
+            --stack-name ${{ env.STACK_NAME }} \
+            --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+                ParameterKey=GitHubBranch,ParameterValue=${{ env.BRANCH_NAME }} \
+                ParameterKey=GitHubRepo,ParameterValue=$REPO_NAME \
+                ParameterKey=Prefix,ParameterValue=${PREFIX}
+
+      - name: Run pipeline
+        if: github.event_name == 'push'
+        run: |
+          set -e
+
+          # Start the pipeline
+          EXECUTION_ID=$(aws codepipeline start-pipeline-execution \
+            --name "${{ env.BRANCH_NAME }}" \
+            --query 'pipelineExecutionId' \
+            --output text)
+
+          echo "Started pipeline execution: $EXECUTION_ID"
+
+          # Poll until the pipeline completes
+          while true; do
+            STATUS=$(aws codepipeline get-pipeline-execution \
+              --pipeline-name "${{ env.BRANCH_NAME }}" \
+              --pipeline-execution-id "$EXECUTION_ID" \
+              --query 'pipelineExecution.status' \
+              --output text)
+
+            echo "Pipeline status: $STATUS"
+
+            if [[ "$STATUS" == "Succeeded" ]]; then
+              echo "✅ Pipeline succeeded"
+              break
+            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Stopped" ]]; then
+              echo "❌ Pipeline failed with status: $STATUS"
+              exit 1
+            else
+              echo "⏳ Still running... waiting 30s"
+              sleep 30
+            fi
+          done
+
+  teardown:
+    if: github.event.inputs.teardown_only == 'true' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Delete all ephemeral stacks
+        run: |
+          PREFIX="ephemeral-"
+          echo "Looking for stacks with prefix: $PREFIX"
+
+          STACKS=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
+            --query "StackSummaries[?starts_with(StackName, \`${PREFIX}\`)].StackName" \
+            --output text)
+
+          if [ -z "$STACKS" ]; then
+            echo "No stacks found with prefix $PREFIX"
+            exit 0
+          fi
+
+          for STACK in $STACKS; do
+            echo "🔎 Processing stack: $STACK"
+
+            BUCKETS=$(aws cloudformation describe-stack-resources \
+              --stack-name "$STACK" \
+              --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
+              --output text)
+
+            for BUCKET in $BUCKETS; do
+              echo "🪣 Emptying bucket: $BUCKET"
+              aws s3 rm "s3://$BUCKET" --recursive || true
+            done
+
+            echo "🗑 Deleting stack: $STACK"
+            aws cloudformation delete-stack --stack-name "$STACK"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK"
+            echo "✅ Deleted stack: $STACK"
+          done
