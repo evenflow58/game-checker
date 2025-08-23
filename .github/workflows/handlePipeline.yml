@@ -45,13 +45,13 @@ jobs:
 
           sam build -t ./infrastructure/pipeline/template.yaml
 
-          sam deploy /
-            --region us-east-1
-            --resolve-s3
-            --s3_prefix game-checker-pipeline
-            --stack-name $GITHUB_REF_NAME
+          sam deploy \
+            --region us-east-1 \
+            --resolve-s3 \
+            --s3_prefix game-checker-pipeline \
+            --stack-name $GITHUB_REF_NAME \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-            --no-confirm-changeset
+            --no-confirm-changeset \
             --parameter-overrides \
                 ParameterKey=GitHubBranch,ParameterValue=$BRANCH_NAME \
                 ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
