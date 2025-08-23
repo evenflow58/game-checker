@@ -41,8 +41,8 @@ jobs:
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
-          set -e
-
+          echo "$STACK_NAME"
+          
           sam build -t ./infrastructure/pipeline/template.yaml
 
           sam deploy \
