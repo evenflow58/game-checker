@@ -39,13 +39,11 @@ jobs:
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
-          echo "${{ env.STACK_NAME }}"
-
           sam build -t ./infrastructure/pipeline/template.yaml
 
           sam deploy \
             --region us-east-1 \
-            --resolve-s3 \
+            --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-l9itovocker9 \
             --s3-prefix game-checker-pipeline \
             --stack-name ${{ env.STACK_NAME }} \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
