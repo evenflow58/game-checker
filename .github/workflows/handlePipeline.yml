@@ -124,6 +124,7 @@ jobs:
             awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "PREFIX=$PREFIX" >> $GITHUB_ENV
+          echo "EPHEMERAL_STACK=ephemeral-${BRANCH_NAME}" >> $GITHUB_ENV
 
       - name: Delete all ephemeral stacks
         run: |
@@ -136,24 +137,39 @@ jobs:
 
           if [ -z "$STACKS" ]; then
             echo "No stacks found with prefix ${{ env.PREFIX }}"
-            exit 0
+          else
+            for STACK in $STACKS; do
+              echo "🔎 Processing stack: $STACK"
+
+              BUCKETS=$(aws cloudformation describe-stack-resources \
+                --stack-name "$STACK" \
+                --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
+                --output text)
+
+              for BUCKET in $BUCKETS; do
+                echo "🪣 Emptying bucket: $BUCKET"
+                aws s3 rm "s3://$BUCKET" --recursive || true
+              done
+
+              echo "🗑 Deleting stack: $STACK"
+              aws cloudformation delete-stack --stack-name "$STACK"
+              aws cloudformation wait stack-delete-complete --stack-name "$STACK"
+              echo "✅ Deleted stack: $STACK"
+            done
           fi
 
-          for STACK in $STACKS; do
-            echo "🔎 Processing stack: $STACK"
+      - name: Delete stack with naming convention ephemeral-${BRANCH_NAME}
+        run: |
+          echo "Checking for stack: $STACK_NAME"
 
-            BUCKETS=$(aws cloudformation describe-stack-resources \
-              --stack-name "$STACK" \
-              --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
-              --output text)
+          EXISTS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+            --query "Stacks[0].StackName" --output text 2>/dev/null || true)
 
-            for BUCKET in $BUCKETS; do
-              echo "🪣 Emptying bucket: $BUCKET"
-              aws s3 rm "s3://$BUCKET" --recursive || true
-            done
-
-            echo "🗑 Deleting stack: $STACK"
-            aws cloudformation delete-stack --stack-name "$STACK"
-            aws cloudformation wait stack-delete-complete --stack-name "$STACK"
-            echo "✅ Deleted stack: $STACK"
-          done
+          if [ "$EXISTS" = "$STACK_NAME" ]; then
+            echo "🗑 Deleting explicit ephemeral stack: $STACK_NAME"
+            aws cloudformation delete-stack --stack-name "$STACK_NAME"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+            echo "✅ Deleted explicit ephemeral stack: $STACK_NAME"
+          else
+            echo "ℹ️ No explicit ephemeral stack found for $STACK_NAME"
+          fi
