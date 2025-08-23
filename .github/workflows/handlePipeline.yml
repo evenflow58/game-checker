@@ -62,6 +62,41 @@ jobs:
                 ParameterKey=GitHubRepo,ParameterValue=$REPO_NAME \
                 ParameterKey=Prefix,ParameterValue=${PREFIX}
 
+      - name: Run pipeline
+        if: github.event_name == 'push'
+        run: |
+          set -e
+
+          # Start the pipeline
+          EXECUTION_ID=$(aws codepipeline start-pipeline-execution \
+            --name "${{ env.STACK_NAME }}" \
+            --query 'pipelineExecutionId' \
+            --output text)
+
+          echo "Started pipeline execution: $EXECUTION_ID"
+
+          # Poll until the pipeline completes
+          while true; do
+            STATUS=$(aws codepipeline get-pipeline-execution \
+              --pipeline-name "${{ env.STACK_NAME }}" \
+              --pipeline-execution-id "$EXECUTION_ID" \
+              --query 'pipelineExecution.status' \
+              --output text)
+
+            echo "Pipeline status: $STATUS"
+
+            if [[ "$STATUS" == "Succeeded" ]]; then
+              echo "✅ Pipeline succeeded"
+              break
+            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Stopped" ]]; then
+              echo "❌ Pipeline failed with status: $STATUS"
+              exit 1
+            else
+              echo "⏳ Still running... waiting 30s"
+              sleep 30
+            fi
+          done
+
       - name: Delete stack (teardown)
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
