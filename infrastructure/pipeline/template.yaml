@@ -14,6 +14,10 @@ Parameters:
     Type:  String
     AllowedPattern: "[A-Za-z0-9-]*"
     Default: ''
+  ConnectionArn:
+    Type: String
+    Default: arn:aws:codestar-connections:us-east-2:625961017727:connection/760e3889-f416-44aa-9c62-001a92098608
+    Description: The CodePipeline connection to Github
 
 Conditions:
   IsProduction: !Equals [!Ref GitHubBranch, "main"]
@@ -55,17 +59,16 @@ Resources:
             - Name: Source
               ActionTypeId:
                 Category: Source
-                Owner: ThirdParty
-                Provider: GitHub
+                Owner: AWS
+                Provider: CodeStarSourceConnection
                 Version: 1
               OutputArtifacts:
                 - Name: SourceCode
               Configuration:
-                Owner: "{{resolve:secretsmanager:Github:SecretString:owner}}"
-                Repo: !Ref GitHubRepo
-                Branch: !Ref GitHubBranch
-                PollForSourceChanges: false
-                OAuthToken: "{{resolve:secretsmanager:Github:SecretString:token}}"
+                ConnectionArn: !Ref ConnectionArn
+                FullRepositoryId: !Sub "{{resolve:secretsmanager:Github:SecretString:owner}}/${GitHubRepo}"
+                BranchName: !Ref GitHubBranch
+                OutputArtifactFormat: CODE_ZIP
               RunOrder: 1
         - Name: Build
           Actions:
