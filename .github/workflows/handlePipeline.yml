@@ -97,9 +97,9 @@ jobs:
             fi
           done
 
-      - name: Delete stack (teardown)
-        if: github.event_name == 'pull_request' && github.event.action == 'closed'
-        run: |
-          aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
-          aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
+      # - name: Delete stack (teardown)
+      #   if: github.event_name == 'pull_request' && github.event.action == 'closed'
+      #   run: |
+      #     aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
+      #     aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
 
