@@ -119,7 +119,6 @@ jobs:
 
       - name: Delete all ephemeral stacks
         run: |
-          PREFIX="ephemeral-"
           echo "Looking for stacks with prefix: $PREFIX"
 
           STACKS=$(aws cloudformation list-stacks \
