@@ -117,6 +117,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Compute PREFIX ENV variable from branch
+        run: |
+          BRANCH_NAME="${{ github.event.inputs.branch || github.ref_name }}"
+          PREFIX=$(echo "$BRANCH_NAME" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+            awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "PREFIX=$PREFIX" >> $GITHUB_ENV
+
       - name: Delete all ephemeral stacks
         run: |
           echo "Looking for stacks with prefix: ${{ env.PREFIX }}"
