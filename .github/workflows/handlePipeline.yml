@@ -69,7 +69,7 @@ jobs:
 
           # Start the pipeline
           EXECUTION_ID=$(aws codepipeline start-pipeline-execution \
-            --name "${{ env.STACK_NAME }}" \
+            --name "${{ env.BRANCH_NAME }}" \
             --query 'pipelineExecutionId' \
             --output text)
 
@@ -78,7 +78,7 @@ jobs:
           # Poll until the pipeline completes
           while true; do
             STATUS=$(aws codepipeline get-pipeline-execution \
-              --pipeline-name "${{ env.STACK_NAME }}" \
+              --pipeline-name "${{ env.BRANCH_NAME }}" \
               --pipeline-execution-id "$EXECUTION_ID" \
               --query 'pipelineExecution.status' \
               --output text)
