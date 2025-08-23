@@ -95,21 +95,58 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-        - name: Compute PREFIX ENV variable from branch
-          run: |
-            BRANCH_NAME="${{ github.event.inputs.branch || github.ref_name }}"
-            PREFIX=$(echo "$BRANCH_NAME" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
-              awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
-            echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-            echo "PREFIX=$PREFIX" >> $GITHUB_ENV
-            echo "EPHEMERAL_STACK=ephemeral-${BRANCH_NAME}" >> $GITHUB_ENV
+      - name: Compute PREFIX ENV variable from branch
+        run: |
+          BRANCH_NAME="${{ github.event.inputs.branch || github.ref_name }}"
+          PREFIX=$(echo "$BRANCH_NAME" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+            awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "PREFIX=$PREFIX" >> $GITHUB_ENV
+          echo "EPHEMERAL_STACK=ephemeral-${BRANCH_NAME}" >> $GITHUB_ENV
 
-        - name: Delete ephemeral stacks
-          run: |
-            set -euo pipefail
+      - name: Delete ephemeral stacks
+        run: |
+          set -euo pipefail
 
-            delete_stack () {
-              local STACK="$1"
-              echo "🔎 Processing stack: $STACK"
+          delete_stack () {
+            local STACK="$1"
+            echo "🔎 Processing stack: $STACK"
 
-              BUCKETS=$(aws cloudformation describe-stack
+            BUCKETS=$(aws cloudformation describe-stack-resources \
+              --stack-name "$STACK" \
+              --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
+              --output text 2>/dev/null || true)
+
+            for BUCKET in $BUCKETS; do
+              echo "🪣 Emptying bucket: $BUCKET"
+              aws s3 rm "s3://$BUCKET" --recursive || true
+            done
+
+            echo "🗑 Deleting stack: $STACK"
+            aws cloudformation delete-stack --stack-name "$STACK"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK"
+            echo "✅ Deleted stack: $STACK"
+          }
+
+          echo "Looking for stacks with prefix: ${{ env.PREFIX }}"
+          STACKS=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
+            --query "StackSummaries[?starts_with(StackName, \`${{ env.PREFIX }}\`)].StackName" \
+            --output text)
+
+          for STACK in $STACKS; do
+            delete_stack "$STACK"
+          done
+
+          # Explicit ephemeral-${BRANCH_NAME} stack
+          STACK_NAME="${{ env.EPHEMERAL_STACK }}"
+          echo "Checking for explicit ephemeral stack: $STACK_NAME"
+
+          EXISTS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+            --query "Stacks[0].StackName" --output text 2>/dev/null || true)
+
+          if [ "$EXISTS" = "$STACK_NAME" ]; then
+            delete_stack "$STACK_NAME"
+          else
+            echo "ℹ️ No explicit ephemeral stack found for $STACK_NAME"
+          fi
