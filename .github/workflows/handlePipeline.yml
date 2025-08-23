@@ -57,7 +57,6 @@ jobs:
                 ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
                 ParameterKey=Prefix,ParameterValue=$PREFIX
 
-      # 7️⃣ Teardown ephemeral stack on PR close
       - name: Delete stack (teardown)
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
