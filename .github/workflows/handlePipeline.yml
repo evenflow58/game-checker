@@ -48,8 +48,8 @@ jobs:
           sam deploy \
             --region us-east-1 \
             --resolve-s3 \
-            --s3_prefix game-checker-pipeline \
-            --stack-name $GITHUB_REF_NAME \
+            --s3-prefix game-checker-pipeline \
+            --stack-name $STACK_NAME \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
             --no-confirm-changeset \
             --parameter-overrides \
