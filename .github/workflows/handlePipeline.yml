@@ -8,6 +8,12 @@ on:
   pull_request:
     types: [closed]  # teardown when PR closes
 
+env:
+  STACK_NAME: ephemeral-${GITHUB_REF_NAME}
+  BRANCH_NAME: ${GITHUB_REF_NAME}
+  PREFIX: $(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
+          awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
+
 jobs:
   ephemeral-env:
     runs-on: ubuntu-latest
@@ -22,14 +28,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Set env vars
-        run: |
-          echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          echo "STACK_NAME=ephemeral-${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          PREFIX=$(echo "$GITHUB_REPOSITORY" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
-                   awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
-          echo "PREFIX=$PREFIX" >> $GITHUB_ENV
-
       - name: Validate CloudFormation template
         run: |
           aws cloudformation validate-template \
@@ -41,7 +39,7 @@ jobs:
       - name: Deploy CloudFormation stack
         if: github.event_name == 'push'
         run: |
-          echo "$STACK_NAME"
+          echo "${{ env.STACK_NAME }}"
 
           sam build -t ./infrastructure/pipeline/template.yaml
 
@@ -49,16 +47,16 @@ jobs:
             --region us-east-1 \
             --resolve-s3 \
             --s3-prefix game-checker-pipeline \
-            --stack-name "$STACK_NAME" \
+            --stack-name ${{ env.STACK_NAME }} \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
             --no-confirm-changeset \
             --parameter-overrides \
-                ParameterKey=GitHubBranch,ParameterValue=$BRANCH_NAME \
+                ParameterKey=GitHubBranch,ParameterValue=${{ env.BRANCH_NAME }} \
                 ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
-                ParameterKey=Prefix,ParameterValue=$PREFIX
+                ParameterKey=Prefix,ParameterValue=${{ env.PREFIX }}
 
       - name: Delete stack (teardown)
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         run: |
-          aws cloudformation delete-stack --stack-name $STACK_NAME
-          aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+          aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
+          aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
