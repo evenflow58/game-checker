@@ -57,8 +57,8 @@ jobs:
                 ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
                 ParameterKey=Prefix,ParameterValue=$PREFIX
 
-      - name: Delete stack (teardown)
-        if: github.event_name == 'pull_request' && github.event.action == 'closed'
-        run: |
-          aws cloudformation delete-stack --stack-name $STACK_NAME
-          aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+      # - name: Delete stack (teardown)
+      #   if: github.event_name == 'pull_request' && github.event.action == 'closed'
+      #   run: |
+      #     aws cloudformation delete-stack --stack-name $STACK_NAME
+      #     aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
