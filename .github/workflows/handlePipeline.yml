@@ -84,38 +84,16 @@ jobs:
 
           echo "Started pipeline execution: $EXECUTION_ID"
 
-          # Poll until the pipeline completes
-          while true; do
-            STATUS=$(aws codepipeline get-pipeline-execution \
-              --pipeline-name "${{ env.BRANCH_NAME }}" \
-              --pipeline-execution-id "$EXECUTION_ID" \
-              --query 'pipelineExecution.status' \
-              --output text)
-
-            echo "Pipeline status: $STATUS"
-
-            if [[ "$STATUS" == "Succeeded" ]]; then
-              echo "✅ Pipeline succeeded"
-              break
-            elif [[ "$STATUS" == "Failed" || "$STATUS" == "Stopped" ]]; then
-              echo "❌ Pipeline failed with status: $STATUS"
-              exit 1
-            else
-              echo "⏳ Still running... waiting 30s"
-              sleep 30
-            fi
-          done
-
-    teardown:
-      if: github.event.inputs.teardown_only == 'true' || (github.event_name == 'pull_request' && github.event.action == 'closed')
-      runs-on: ubuntu-latest
-      steps:
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v4
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: us-east-1
+  teardown:
+    if: github.event.inputs.teardown_only == 'true' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
         - name: Compute PREFIX ENV variable from branch
           run: |
