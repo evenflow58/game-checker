@@ -25,6 +25,7 @@ jobs:
           PREFIX=$(echo "${GITHUB_REPOSITORY}" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
             awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
           echo "PREFIX=$PREFIX" >> $GITHUB_ENV
+          echo "REPO_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -57,7 +58,7 @@ jobs:
             --no-confirm-changeset \
             --parameter-overrides \
                 ParameterKey=GitHubBranch,ParameterValue=${{ env.BRANCH_NAME }} \
-                ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
+                ParameterKey=GitHubRepo,ParameterValue=$REPO_NAME \
                 ParameterKey=Prefix,ParameterValue=${PREFIX}
 
       - name: Delete stack (teardown)
