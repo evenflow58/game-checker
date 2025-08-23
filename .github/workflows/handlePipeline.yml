@@ -9,14 +9,17 @@ on:
     types: [closed]
   workflow_dispatch:  # 👈 allows manual trigger
     inputs:
+      branch:
+        description: "Branch to deploy"
+        required: true
       teardown_only:
         description: "Run only the teardown step?"
         required: false
         default: "false"
 
 env:
-  STACK_NAME: ephemeral-${GITHUB_REF_NAME}
-  BRANCH_NAME: ${GITHUB_REF_NAME}
+  STACK_NAME: ephemeral-${{ github.event.inputs.branch || github.ref_name }}
+  BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name }}
   
 jobs:
   ephemeral-env:
