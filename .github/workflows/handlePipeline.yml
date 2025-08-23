@@ -42,14 +42,14 @@ jobs:
         if: github.event_name == 'push'
         run: |
           echo "$STACK_NAME"
-          
+
           sam build -t ./infrastructure/pipeline/template.yaml
 
           sam deploy \
             --region us-east-1 \
             --resolve-s3 \
             --s3-prefix game-checker-pipeline \
-            --stack-name $STACK_NAME \
+            --stack-name "$STACK_NAME" \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
             --no-confirm-changeset \
             --parameter-overrides \
