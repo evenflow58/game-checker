@@ -45,7 +45,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           echo "${PREFIX}"
-
+          
           sam build -t ./infrastructure/pipeline/template.yaml
 
           sam deploy \
@@ -60,8 +60,8 @@ jobs:
                 ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPOSITORY \
                 ParameterKey=Prefix,ParameterValue=${PREFIX}
 
-      - name: Delete stack (teardown)
-        if: github.event_name == 'pull_request' && github.event.action == 'closed'
-        run: |
-          aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
-          aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
+      # - name: Delete stack (teardown)
+      #   if: github.event_name == 'pull_request' && github.event.action == 'closed'
+      #   run: |
+      #     aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
+      #     aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
