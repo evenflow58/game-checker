@@ -45,6 +45,7 @@ Resources:
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
+      Name: !Ref GitHubBranch
       RoleArn: !ImportValue PipelineInfrastructureRoleArn
       ArtifactStore:
         Type: S3
