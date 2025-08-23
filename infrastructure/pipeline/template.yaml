@@ -16,7 +16,7 @@ Parameters:
     Default: ''
   ConnectionArn:
     Type: String
-    Default: arn:aws:codestar-connections:us-east-2:625961017727:connection/760e3889-f416-44aa-9c62-001a92098608
+    Default: arn:aws:codeconnections:us-east-1:625961017727:connection/c2184df4-76ee-4272-8acd-1d74bf4a84fb
     Description: The CodePipeline connection to Github
 
 Conditions:
