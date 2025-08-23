@@ -6,7 +6,13 @@ on:
       - "main"
       - "master"
   pull_request:
-    types: [closed]  # teardown when PR closes
+    types: [closed]
+  workflow_dispatch:  # 👈 allows manual trigger
+    inputs:
+      teardown_only:
+        description: "Run only the teardown step?"
+        required: false
+        default: "false"
 
 env:
   STACK_NAME: ephemeral-${GITHUB_REF_NAME}
@@ -97,9 +103,47 @@ jobs:
             fi
           done
 
-      - name: Delete stack (teardown)
-        if: github.event_name == 'pull_request' && github.event.action == 'closed'
-        run: |
-          aws cloudformation delete-stack --stack-name ${{ env.STACK_NAME }}
-          aws cloudformation wait stack-delete-complete --stack-name ${{ env.STACK_NAME }}
+  teardown:
+    if: github.event.inputs.teardown_only == 'true' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
+      - name: Delete all ephemeral stacks
+        run: |
+          PREFIX="ephemeral-"
+          echo "Looking for stacks with prefix: $PREFIX"
+
+          STACKS=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
+            --query "StackSummaries[?starts_with(StackName, \`${PREFIX}\`)].StackName" \
+            --output text)
+
+          if [ -z "$STACKS" ]; then
+            echo "No stacks found with prefix $PREFIX"
+            exit 0
+          fi
+
+          for STACK in $STACKS; do
+            echo "🔎 Processing stack: $STACK"
+
+            BUCKETS=$(aws cloudformation describe-stack-resources \
+              --stack-name "$STACK" \
+              --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" \
+              --output text)
+
+            for BUCKET in $BUCKETS; do
+              echo "🪣 Emptying bucket: $BUCKET"
+              aws s3 rm "s3://$BUCKET" --recursive || true
+            done
+
+            echo "🗑 Deleting stack: $STACK"
+            aws cloudformation delete-stack --stack-name "$STACK"
+            aws cloudformation wait stack-delete-complete --stack-name "$STACK"
+            echo "✅ Deleted stack: $STACK"
+          done
