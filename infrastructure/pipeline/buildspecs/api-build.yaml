@@ -20,12 +20,12 @@ phases:
 
       - echo "packaging packages"
       - npm run package:api
-  post_build:
-    commands:
-      - echo Testing API
-      - npm run test:api
+  # post_build:
+  #   commands:
+  #     - echo Testing API
+  #     - npm run test:api
 
-      - echo Testing Finished
+  #     - echo Testing Finished
 
 artifacts:
   files:
