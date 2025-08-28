@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker api gateway authorizer
+Description: The Game Checker API Gateway Authorizer (Node.js)
 
 Parameters:
   ApiGatewayId:
@@ -19,13 +19,10 @@ Resources:
       MemorySize: 128
       Architectures:
         - arm64
-      Handler: bootstrap
+      Handler: out-tsc/index.handler
       Runtime: nodejs22.x
-      Architectures:
-        - arm64
       Timeout: 5
-      CodeUri: rust_app/target/lambda/authorizer
-      # CodeUri: rust_app
+      CodeUri: ./dist
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
