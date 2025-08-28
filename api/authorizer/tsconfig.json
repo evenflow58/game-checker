@@ -17,7 +17,7 @@
     "moduleResolution": "nodenext",
     "importHelpers": true,
     "target": "esnext",
-    "module": "esnext",
+    "module": "NodeNext",
     "useDefineForClassFields": false,
     "lib": [
       "ESNext",
