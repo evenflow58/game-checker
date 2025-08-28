@@ -48,5 +48,5 @@ samconfig.toml
 # Angular files
 .angular
 
-# UI
-ui/dist
+# Dist folders
+dist
