@@ -19,7 +19,6 @@ phases:
       - npm run build:api
 
       - echo "packaging packages"
-      - cd api/authorizer
       - npm run package:api
   # post_build:
   #   commands:
