@@ -20,9 +20,6 @@ phases:
 
       - echo "packaging packages"
       - cd api/authorizer
-      - ls -l
-      - pwd
-      - cd ../../
       - npm run package:api
   # post_build:
   #   commands:
