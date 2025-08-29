@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: The Game Changer api gateway deployment
+
+Parameters:
+  BasePathDomain:
+    Type: String
+    Default: ''
+  HostedZoneId:
+    Type: String
+    Default: Z2FDTNDATAQYW2
+  ApiGatewayId:
+    Type: String
+
+Resources:
+  ProdDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref ApiGatewayId
+      StageName: prod
+
+  ApiGatewayDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Ref BasePathDomain
+      RegionalCertificateArn: !ImportValue CloudFrontCertArn
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ApiGatewayDomainMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      Stage: prod
+      DomainName: !Ref ApiGatewayDomainName
+      RestApiId: !Ref ApiGatewayId
+    DependsOn: ApiGatewayDomainName
+
+  RecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Join [ "", [ !Ref BasePathDomain, "." ] ]
+      Type: A

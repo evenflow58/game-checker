@@ -1,0 +1,11 @@
+{
+    "name": "apigatewaydeployment",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "package": "sam package --template-file ./infrastructure/template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./infrastructure/template.package.yaml"
+    },
+    "author": "",
+    "license": "ISC"
+  }
