@@ -18,8 +18,8 @@ phases:
       - echo "building packages"
       - npm run build:api
 
-      - echo "packaging authorizer packages"
-      - npm run package:api:authorizer
+      # - echo "packaging authorizer packages"
+      # - npm run package:api:authorizer
 
       - echo "packaging gateway packages"
       - npm run package:api:api-gateway
