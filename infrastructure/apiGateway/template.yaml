@@ -23,7 +23,7 @@ Resources:
   Authorizer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ../../../api/authorizer/template.yaml
+      TemplateURL: ../../api/authorizer/template.yaml
       Parameters:
         ApiGatewayId: !Ref ApiGateway
         Prefix: !Ref Prefix
