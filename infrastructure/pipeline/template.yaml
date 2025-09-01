@@ -165,7 +165,7 @@ Resources:
               Configuration:
                 ActionMode: CREATE_UPDATE
                 RoleArn: !ImportValue CloudFormationExecutionRoleArn
-                TemplatePath: apiGatewayBuildOutput::infrastructure/template.package.yaml
+                TemplatePath: apiGatewayBuildOutput::template.package.yaml
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
                 StackName: !Sub ["${Prefix}Stack-API", { "Prefix": !Ref Prefix }]
                 ParameterOverrides: !Sub |
