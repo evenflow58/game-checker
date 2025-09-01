@@ -18,8 +18,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ["${Prefix}GetHealth_V1", { Prefix: !Ref Prefix }]
-      CodeUri: dist   # <-- change this to your Node build output folder
-      Handler: index.handler   # <-- must match your Node entrypoint
+      CodeUri: ./dist
+      Handler: index.handler
       Runtime: nodejs22.x
       Architectures:
         - arm64

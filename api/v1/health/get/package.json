@@ -11,5 +11,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
     "deploy": "sam build --beta-features && sam deploy --no-confirm-changeset"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
   }
 }
