@@ -19,10 +19,10 @@ phases:
       - npm run build:api
 
       - echo "packaging authorizer packages"
-      - npm run package:api:authorizer
+      - npm run package:api
 
       - echo "packaging gateway packages"
-      - npm run package:api:api-gateway
+      - npm run package:api-gateway
       # - npm run package:api
   # post_build:
   #   commands:
