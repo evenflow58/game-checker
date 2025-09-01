@@ -7,6 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "build": "npm-run-all --parallel build:* && cd ../",
+    "build:health": "cd get && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "npm-run-all package:*",
     "package:health": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
