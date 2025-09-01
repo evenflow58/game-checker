@@ -1,0 +1,18 @@
+{
+  "name": "game-checker-api",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Evan Johnson",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm-run-all --parallel build:*",
+    "build:authorizer": "cd authorizer && npm run build",
+    "build:v1": "cd v1 && npm run build",
+    "package": "npm-run-all --parallel package:*",
+    "package:authorizer": "cd authorizer && npm run package",
+    "package:v1": "cd v1 && npm run package",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

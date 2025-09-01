@@ -1,0 +1,15 @@
+{
+  "name": "game-checker-health",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Evan Johnson",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "package": "npm-run-all --parallel package:*",
+    "package:health": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
+    "package:get": "cd get && npm run package"
+  }
+}

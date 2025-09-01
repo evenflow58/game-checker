@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: The Game Checker api army path
+
+Parameters:
+  ApiGatewayId:
+    Type: String
+    Description: The ID of the API Gateway this method should be attached to.
+  # AuthorizerId:
+  #   Type: String
+  #   Description: The ID of the authorizer
+  # TableName:
+  #   Type: String
+  #   Description: The name of the table to load data into
+  Prefix:
+    Type: String
+    AllowedPattern: "[A-Za-z0-9-]*"
+  ApiGatewayResource:
+    Type: String
+    Description: The api gateway resource to attach the endpoint to
+
+Resources:
+  HealthApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGatewayId
+      ParentId: !Ref ApiGatewayResource
+      PathPart: health
+
+  HealthOptionsEndpoint:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref ApiGatewayId
+      ResourceId: !Ref HealthApiGatewayResource
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,POST'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: NEVER
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+          ResponseModels:
+            application/json: 'Empty'
+
+  Ping:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: get/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGatewayId
+        Prefix: !Ref Prefix
+        ApiGatewayResource: !Ref HealthApiGatewayResource

@@ -1,0 +1,15 @@
+{
+  "name": "game-checker-health-get",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && cp -r node_modules dist",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "package": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
+    "deploy": "sam build --beta-features && sam deploy --no-confirm-changeset"
+  }
+}
