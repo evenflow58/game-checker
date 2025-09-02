@@ -9,9 +9,11 @@
   "scripts": {
     "build": "npm-run-all --parallel build:* && cd ../",
     "build:health": "cd get && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "npm-run-all --parallel install:* && cd ../",
+    "install:get": "cd get && npm i",
     "package": "npm-run-all package:*",
     "package:health": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
-    "package:get": "cd get && npm run package"
+    "package:get": "cd get && npm run package",
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
