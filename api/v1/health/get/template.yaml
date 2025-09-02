@@ -9,7 +9,7 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
-  ApiGatewayResource:
+  ApiGatewayResourceId:
     Type: String
     Description: The api gateway resource to attach the endpoint to
 
@@ -29,7 +29,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref ApiGatewayResource
+      ResourceId: !Ref ApiGatewayResourceId
       HttpMethod: Get
       AuthorizationType: NONE
       Integration:

@@ -63,4 +63,10 @@ Resources:
       Parameters:
         ApiGatewayId: !Ref ApiGatewayId
         Prefix: !Ref Prefix
-        ApiGatewayResource: !Ref HealthApiGatewayResource
+        ApiGatewayResourceId: !Ref HealthApiGatewayResource
+
+Outputs:
+  HealthApiGatewayResourceId:
+    Value: !Ref HealthApiGatewayResource
+    Export:
+      Name: !Sub "${AWS::StackName}-HealthApiResourceId"
