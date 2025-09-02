@@ -18,20 +18,11 @@ phases:
       - echo "building packages"
       - npm run build:api
 
-      - cd api/v1/health/get
-      - npm run package
-      - cd ../
-      - npm run package
-      - cd ../
-      - npm run package
-      - cd ../
-      - npm run package
+      - echo "packaging authorizer packages"
+      - npm run package:api
 
-      # - echo "packaging authorizer packages"
-      # - npm run package:api
-
-      # - echo "packaging gateway packages"
-      # - npm run package:api-gateway
+      - echo "packaging gateway packages"
+      - npm run package:api-gateway
 
   # post_build:
   #   commands:

@@ -34,7 +34,7 @@
 
     "package-all": "npm-run-all --parallel package:*",
 
-    "package:api": "npm-run-all --parallel package:api:* && pwd && cd ../",
+    "package:api": "npm-run-all --parallel package:api:* && cd ../",
     "package:api:api": "cd api && npm run package",
     "package:api-gateway": "cd infrastructure/apiGateway && npm run package",
 
