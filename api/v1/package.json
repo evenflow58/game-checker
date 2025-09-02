@@ -9,7 +9,7 @@
   "scripts": {
     "build": "npm-run-all --parallel build:* && cd ../",
     "build:health": "cd health && npm run build",
-    "install": "npm-run-all --parallel install:* && cd ../",
+    "install": "npm-run-all --parallel install:*",
     "install:health": "cd health && npm i",
     "package": "npm-run-all package:*",
     "package:v1": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
