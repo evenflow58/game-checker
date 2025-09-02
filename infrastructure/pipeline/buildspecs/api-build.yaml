@@ -22,6 +22,10 @@ phases:
       - npm run package:api
 
       - echo "packaging gateway packages"
+      - cd api/v1
+      - pwd 
+      - ls -l
+      - cd ../../
       - npm run package:api-gateway
 
   # post_build:
