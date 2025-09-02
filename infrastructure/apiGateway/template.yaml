@@ -31,7 +31,7 @@ Resources:
   V1:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ../../../api/v1/template.yaml
+      TemplateURL: ../../api/v1/template.yaml
       Parameters:
         ApiGatewayId: !Ref ApiGateway
         RootResourceId: !GetAtt ApiGateway.RootResourceId
