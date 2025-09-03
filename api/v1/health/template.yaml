@@ -59,6 +59,7 @@ Resources:
 
   Ping:
     Type: AWS::CloudFormation::Stack
+    DependsOn: HealthApiGatewayResource
     Properties:
       TemplateURL: get/template.yaml
       Parameters:
