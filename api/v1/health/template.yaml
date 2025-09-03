@@ -29,6 +29,7 @@ Resources:
 
   HealthOptionsEndpoint:
     Type: AWS::ApiGateway::Method
+    DependsOn: HealthApiGatewayResource
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref ApiGatewayId
