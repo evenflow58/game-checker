@@ -23,14 +23,4 @@ Resources:
       ParentId: !Ref RootResourceId
       RestApiId: !Ref ApiGatewayId
       PathPart: v1
-
-  Health:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: health/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGatewayId
-        # AuthorizerId: !Ref AuthorizerId
-        Prefix: !Ref Prefix
-        ApiGatewayResource: !Ref RootResourceId
         

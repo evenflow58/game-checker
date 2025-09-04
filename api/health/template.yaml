@@ -15,7 +15,7 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
-  ApiGatewayResource:
+  RootResourceId:
     Type: String
     Description: The api gateway resource to attach the endpoint to
 
@@ -24,7 +24,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ApiGatewayId
-      ParentId: !Ref ApiGatewayResource
+      ParentId: !Ref RootResourceId
       PathPart: health
 
   HealthOptionsEndpoint:
@@ -72,7 +72,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref ApiGatewayResource
+      ResourceId: !Ref HealthApiGatewayResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
