@@ -8,7 +8,7 @@ Parameters:
     Default: ''
   HostedZoneId:
     Type: String
-    Default: Z2FDTNDATAQYW2
+    Default: Z02241462DXLIC7B4J76X
   ApiGatewayId:
     Type: String
 
