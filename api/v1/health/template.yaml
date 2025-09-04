@@ -72,3 +72,7 @@ Outputs:
     Value: !Ref HealthApiGatewayResource
     Export:
       Name: !Sub "${AWS::StackName}-HealthApiResourceId"
+  ApiGatewayId:
+    Value: !Ref ApiGatewayId
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayId"
