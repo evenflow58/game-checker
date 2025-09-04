@@ -41,6 +41,15 @@ Resources:
         Prefix: !Ref Prefix
     DependsOn: Authorizer
 
+  Health:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ../../api/health/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGateway
+        RootResourceId: !GetAtt ApiGateway.RootResourceId
+        Prefix: !Ref Prefix
+
   # V2:
   #   Type: AWS::CloudFormation::Stack
   #   Properties:
