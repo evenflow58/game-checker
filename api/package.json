@@ -9,9 +9,11 @@
   "scripts": {
     "build": "npm-run-all --parallel build:*",
     "build:authorizer": "cd authorizer && npm run build",
+    "build:health": "cd health && npm run build",
     "build:v1": "cd v1 && npm run build",
     "install": "npm-run-all --parallel install:*",
     "install:authorizer": "cd authorizer && npm i",
+    "install:health": "cd health && npm i",
     "install:v1": "cd v1 && npm i",
     "package": "npm-run-all package:*",
     "package:authorizer": "cd authorizer && npm run package",
