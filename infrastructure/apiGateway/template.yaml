@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: The Game Checker api gateway infrastructure
+
+Parameters:
+  # TableName:
+  #   Type: String
+  #   Description: The name of the table to load data into
+  Prefix:
+    Type: String
+    AllowedPattern: "[A-Za-z0-9-]*"
+
+Resources:
+  ApiGateway: 
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: The Game Checker API
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: !Sub ["${Prefix}ApiGateway", Prefix: !Ref Prefix]
+
+  Authorizer:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ApiGateway
+    Properties:
+      TemplateURL: ../../api/authorizer/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGateway
+        Prefix: !Ref Prefix
+
+  V1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ../../api/v1/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGateway
+        RootResourceId: !GetAtt ApiGateway.RootResourceId
+        AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
+        # TableName: !Ref TableName
+        Prefix: !Ref Prefix
+    DependsOn: Authorizer
+
+  Health:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ../../api/health/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGateway
+        RootResourceId: !GetAtt ApiGateway.RootResourceId
+        Prefix: !Ref Prefix
+
+  # V2:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: ../../../api/v2/template.yaml
+  #     Parameters:
+  #       ApiGatewayId: !Ref ApiGateway
+  #       RootResourceId: !GetAtt ApiGateway.RootResourceId
+  #       AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
+  #       Prefix: !Ref Prefix
+  #   DependsOn: Authorizer
+
+Outputs:
+  ApiGatewayId:
+    Value: !Ref ApiGateway
+    Description: The ID of the api gateway
+
+  RootResourceId:
+    Value: !GetAtt ApiGateway.RootResourceId
+    Description: The ID of the api root resource

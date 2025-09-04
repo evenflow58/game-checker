@@ -42,6 +42,26 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspecs/ui-build.yaml
 
+  ApiBuildRunner:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ["${Prefix}ApiBuildRunner", { Prefix: !Ref Prefix}]
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:6.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: BUILD_OUTPUT_BUCKET
+            Value: !ImportValue ArtifactBucketId
+          - Name: S3_BUCKET
+            Value: !ImportValue ArtifactBucketId
+      ServiceRole: !ImportValue BuildExecutionRoleArn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspecs/api-build.yaml
+
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -84,6 +104,20 @@ Resources:
               - Name: uiBuildOutput
               - Name: urlBuildOutput
             RunOrder: 1
+          - Name: BuildApi
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref ApiBuildRunner
+            InputArtifacts:
+              - Name: SourceCode
+            OutputArtifacts:
+              - Name: apiGatewayBuildOutput
+              - Name: apiGatewayDeploymentBuildOutput
+            RunOrder: 1
         - Name: Deploy
           Actions:
             - Name: DeployUrl
@@ -119,6 +153,44 @@ Resources:
                 - Name: uiBuildOutput
               Region: us-east-1
               RunOrder: 2
+            - Name: DeployApi
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              InputArtifacts:
+                - Name: apiGatewayBuildOutput
+              Namespace: api
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !ImportValue CloudFormationExecutionRoleArn
+                TemplatePath: apiGatewayBuildOutput::template.package.yaml
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                StackName: !Sub ["${Prefix}Stack-API", { "Prefix": !Ref Prefix }]
+                ParameterOverrides: !Sub |
+                  {
+                    "Prefix": "${Prefix}"
+                  }
+              RunOrder: 2
+            - Name: DeployApiStage
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              InputArtifacts:
+                - Name: apiGatewayDeploymentBuildOutput
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !ImportValue CloudFormationExecutionRoleArn
+                TemplatePath: apiGatewayDeploymentBuildOutput::template.package.yaml
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                StackName: !Sub ["${Prefix}Stack-Stack-Api-Deployment", { "Prefix": !Ref Prefix }]
+                ParameterOverrides: !Sub
+                  - '{ "BasePathDomain": "${BasePathDomain}", "ApiGatewayId": "#{api.ApiGatewayId}" }'
+                  - BasePathDomain: !If [IsProduction, 'api.doiownthatgame.com', !Sub 'api-${GitHubBranch}.doiownthatgame.com']
+              RunOrder: 3
 
 Outputs:
   PipelineName:

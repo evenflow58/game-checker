@@ -1,0 +1,48 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "installing base packages"
+      - npm i
+
+      - echo Installing API packages
+      - npm run install:api
+  build:
+    commands:
+      - echo "building packages"
+      - npm run build:api
+
+      - echo "packaging authorizer packages"
+      - npm run package:api 
+
+      - pwd
+      - ls -l
+      - cd infrastructure/apiGatewayDeployment
+      - pwd
+      - ls -l
+
+  # post_build:
+  #   commands:
+  #     - echo Testing API
+  #     - npm run test:api
+
+  #     - echo Testing Finished
+
+artifacts:
+  files:
+    - '*'
+  secondary-artifacts:
+    apiGatewayBuildOutput:
+      base-directory: infrastructure/apiGateway
+      files:
+        - '**/*'
+    apiGatewayDeploymentBuildOutput:
+      base-directory: infrastructure/apiGatewayDeployment
+      files:
+        - '**/*'
