@@ -57,15 +57,15 @@ Resources:
           ResponseModels:
             application/json: 'Empty'
 
-  Ping:
-    Type: AWS::CloudFormation::Stack
-    DependsOn: HealthApiGatewayResource
-    Properties:
-      TemplateURL: get/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGatewayId
-        Prefix: !Ref Prefix
-        ApiGatewayResourceId: !Ref HealthApiGatewayResource
+  # Ping:
+  #   Type: AWS::CloudFormation::Stack
+  #   DependsOn: HealthApiGatewayResource
+  #   Properties:
+  #     TemplateURL: get/template.yaml
+  #     Parameters:
+  #       ApiGatewayId: !Ref ApiGatewayId
+  #       Prefix: !Ref Prefix
+  #       ApiGatewayResource: !Ref HealthApiGatewayResource
 
 Outputs:
   HealthApiGatewayResourceId:
