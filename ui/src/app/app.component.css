@@ -1,0 +1,69 @@
+/* Container for Google Sign-In button */
+.signin-container {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0;
+  }
+  
+  /* User info layout */
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 8px;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+    justify-content: center; /* Center elements horizontally */
+  }
+  
+  /* Profile picture as circle */
+  .profile-pic {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+  }
+  
+  /* Container for text and button */
+  .user-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  /* Welcome text */
+  .user-text p {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  
+  /* Sign out button */
+  .user-text button {
+    padding: 4px 12px;
+    cursor: pointer;
+    border: none;
+    background-color: #4285f4;
+    color: white;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  
+  .user-text button:hover {
+    background-color: #357ae8;
+  }
+  
+  /* Responsive adjustments for very small screens */
+  @media (max-width: 400px) {
+    .user-info {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .user-text {
+      align-items: center;
+    }
+  }
+  
