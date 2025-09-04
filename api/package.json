@@ -15,6 +15,7 @@
     "install:health": "cd health && npm i",
     "package": "npm-run-all package:*",
     "package:authorizer": "cd authorizer && npm run package",
+    "package:health": "cd health && npm run package",
     "package:v1": "cd v1 && npm run package",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
