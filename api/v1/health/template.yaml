@@ -57,22 +57,80 @@ Resources:
           ResponseModels:
             application/json: 'Empty'
 
-  # Ping:
-  #   Type: AWS::CloudFormation::Stack
-  #   DependsOn: HealthApiGatewayResource
-  #   Properties:
-  #     TemplateURL: get/template.yaml
-  #     Parameters:
-  #       ApiGatewayId: !Ref ApiGatewayId
-  #       Prefix: !Ref Prefix
-  #       ApiGatewayResource: !Ref HealthApiGatewayResource
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ["${Prefix}GetHealth", { Prefix: !Ref Prefix }]
+      CodeUri: ./dist/out-tsc
+      Handler: index.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - arm64
+      Role: !GetAtt LambdaRole.Arn
 
-Outputs:
-  HealthApiGatewayResourceId:
-    Value: !Ref HealthApiGatewayResource
-    Export:
-      Name: !Sub "${AWS::StackName}-HealthApiResourceId"
-  ApiGatewayId:
-    Value: !Ref ApiGatewayId
-    Export:
-      Name: !Sub "${AWS::StackName}-ApiGatewayId"
+  GetEndpoint:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGatewayId
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt ApiRole.Arn
+        TimeoutInMillis: 29000
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations'
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ""
+            Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+
+  Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayId}/*
+
+  ApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ""
+            Effect: "Allow"
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+
+  ApiPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ["${Prefix}GetHealthLambdaAccess", { Prefix: !Ref Prefix }]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "lambda:*"
+            Resource: !GetAtt Function.Arn
+      Roles:
+        - !Ref ApiRole

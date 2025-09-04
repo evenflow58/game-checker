@@ -7,13 +7,14 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "npm-run-all --parallel build:* && cd ../",
-    "build:health": "cd get && npm run build",
-    "install": "npm-run-all --parallel install:*",
-    "install:get": "cd get && npm i",
-    "package": "npm-run-all package:*",
-    "package:health": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
-    "package:get": "cd get && npm run package",
+    "build": "tsc && cp -r node_modules dist",
+    "deploy": "npm run build && sam build && sam deploy --capabilities CAPABILITY_NAMED_IAM",
+    "package": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
   }
 }
