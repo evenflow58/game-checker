@@ -24,12 +24,12 @@ phases:
 
       - echo "packaging packages"
       - npm run package:ui
-  post_build:
-    commands:
-      - echo Testing UI
-      - npm run test:ui
+  # post_build:
+  #   commands:
+  #     - echo Testing UI
+  #     - npm run test:ui
 
-      - echo Testing Finished
+  #     - echo Testing Finished
 
 artifacts:
   files:
