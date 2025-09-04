@@ -104,6 +104,19 @@ jobs:
           echo "PREFIX=$PREFIX" >> $GITHUB_ENV
           echo "EPHEMERAL_STACK=ephemeral-${BRANCH_NAME}" >> $GITHUB_ENV
 
+      - name: Delete ephemeral buckets by name
+        run: |
+          set -euo pipefail
+          echo "🔎 Searching for buckets named ephemeral-${BRANCH_NAME}*"
+
+          BUCKETS=$(aws s3api list-buckets --query "Buckets[].Name" --output text | tr '\t' '\n' | grep "^ephemeral-${BRANCH_NAME}" || true)
+
+          for BUCKET in $BUCKETS; do
+            echo "🪣 Emptying and deleting bucket: $BUCKET"
+            aws s3 rm "s3://$BUCKET" --recursive || true
+            aws s3api delete-bucket --bucket "$BUCKET" || true
+          done
+
       - name: Delete ephemeral stacks
         run: |
           set -euo pipefail
