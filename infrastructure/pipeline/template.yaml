@@ -173,6 +173,24 @@ Resources:
                     "Prefix": "${Prefix}"
                   }
               RunOrder: 2
+            - Name: DeployApiStage
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              InputArtifacts:
+                - Name: apiGatewayDeploymentBuildOutput
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !ImportValue CloudFormationExecutionRoleArn
+                TemplatePath: apiGatewayDeploymentBuildOutput::infrastructure/template.package.yaml
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
+                StackName: !Sub ["${Prefix}Stack-Stack-Api-Deployment", { "Prefix": !Ref Prefix }]
+                ParameterOverrides: !Sub
+                  - '{ "BasePathDomain": "${BasePathDomain}", "ApiGatewayId": "#{api.ApiGatewayId}" }'
+                  - BasePathDomain: !If [IsProduction, 'api.doiownthatgame.com', !Sub 'api-${GitHubBranch}.doiownthatgame.com']
+              RunOrder: 3
 
 Outputs:
   PipelineName:
