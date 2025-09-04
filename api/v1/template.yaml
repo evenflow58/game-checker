@@ -32,5 +32,5 @@ Resources:
         ApiGatewayId: !Ref ApiGatewayId
         # AuthorizerId: !Ref AuthorizerId
         Prefix: !Ref Prefix
-        ApiGatewayResource: !Ref V1Path
+        ApiGatewayResource: !Ref RootResourceId
         
