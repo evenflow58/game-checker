@@ -19,14 +19,7 @@ phases:
       - npm run build:api
 
       - echo "packaging authorizer packages"
-      - npm run package:api
-
-      - echo "packaging gateway packages"
-      - cd api/v1
-      - pwd 
-      - ls -l
-      - cd ../../
-      - npm run package:api-gateway
+      - npm run package:api 
 
   # post_build:
   #   commands:
