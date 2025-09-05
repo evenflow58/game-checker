@@ -8,6 +8,6 @@ export const handler: APIGatewayProxyHandlerV2 = async () => {
       'Access-Control-Allow-Headers': '*',
       'Access-Control-Allow-Methods': 'GET,OPTIONS',
     },
-    body: JSON.stringify({ message: "pong" }),
+    body: JSON.stringify({ message: "Success!" }),
   };
 };

@@ -6,12 +6,9 @@ Parameters:
   ApiGatewayId:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  # AuthorizerId:
-  #   Type: String
-  #   Description: The ID of the authorizer
-  # TableName:
-  #   Type: String
-  #   Description: The name of the table to load data into
+  AuthorizerId:
+    Type: String
+    Description: The ID of the authorizer
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
@@ -20,19 +17,19 @@ Parameters:
     Description: The api gateway resource to attach the endpoint to
 
 Resources:
-  HealthApiGatewayResource:
+  V1TestApiGatewayResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ApiGatewayId
       ParentId: !Ref RootResourceId
-      PathPart: health
+      PathPart: test
 
-  HealthOptionsEndpoint:
+  V1TestOptionsEndpoint:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref HealthApiGatewayResource
+      ResourceId: !Ref V1TestApiGatewayResource
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
@@ -59,7 +56,7 @@ Resources:
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ["${Prefix}GetHealth", { Prefix: !Ref Prefix }]
+      FunctionName: !Sub ["${Prefix}V1TestGet", { Prefix: !Ref Prefix }]
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
@@ -67,11 +64,11 @@ Resources:
         - arm64
       Role: !GetAtt LambdaRole.Arn
 
-  GetEndpoint:
+  V1TestGetEndpoint:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref HealthApiGatewayResource
+      ResourceId: !Ref V1TestApiGatewayResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
@@ -124,7 +121,7 @@ Resources:
   ApiPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub ["${Prefix}GetHealthLambdaAccess", { Prefix: !Ref Prefix }]
+      PolicyName: !Sub ["${Prefix}V1TestGetLambdaAccess", { Prefix: !Ref Prefix }]
       PolicyDocument:
         Version: "2012-10-17"
         Statement:

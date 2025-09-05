@@ -23,4 +23,14 @@ Resources:
       ParentId: !Ref RootResourceId
       RestApiId: !Ref ApiGatewayId
       PathPart: v1
-        
+
+  Test:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./test/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGatewayId
+        RootResourceId: !GetAtt V1Path.ResourceId
+        AuthorizerId: !Ref AuthorizerId
+        # TableName: !Ref TableName
+        Prefix: !Ref Prefix
