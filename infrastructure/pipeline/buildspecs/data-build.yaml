@@ -15,14 +15,11 @@ phases:
       - echo "packaging packages"
       - npm run package:data
 
-      - pwd
-      - ls -l
-
 artifacts:
   files:
     - '*'
   secondary-artifacts:
     databaseBuildOutput:
-      base-directory: '*'
+      base-directory: 'infrastructure/database'
       files:
         - '**/*'
