@@ -15,6 +15,9 @@ phases:
       - echo "packaging packages"
       - npm run package:data
 
+      - pwd
+      - ls -l
+
 artifacts:
   files:
     - '*'
