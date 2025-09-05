@@ -1,30 +1,22 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, NgZone } from '@angular/core';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 
 declare const google: any;
 
-export interface GoogleUser {
-  name: string;
-  email: string;
-  picture: string;
-  sub: string;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class GoogleAuthService {
-  private userSubject = new BehaviorSubject<any>(null);
-  user$ = this.userSubject.asObservable();
+  private userSubject = new ReplaySubject<any>(1);
+  user$: Observable<any> = this.userSubject.asObservable();
 
-  private token: string | null = null; // store raw JWT
+  private token: string | null = null;
 
-  constructor() {}
+  constructor(private zone: NgZone) {}
 
   initClient(clientId: string) {
     google.accounts.id.initialize({
       client_id: clientId,
-      callback: (response: any) => this.handleCredentialResponse(response)
+      callback: (response: any) => this.handleCredentialResponse(response),
     });
   }
 
@@ -37,9 +29,13 @@ export class GoogleAuthService {
 
   private handleCredentialResponse(response: any) {
     const credential = response.credential;
-    this.token = credential; // save the raw JWT
+    this.token = credential;
+
     const payload = this.decodeJwt(credential);
-    this.userSubject.next(payload);
+
+    this.zone.run(() => {
+      this.userSubject.next(payload); // triggers all subscribers
+    });
   }
 
   getToken(): string | null {
@@ -49,7 +45,10 @@ export class GoogleAuthService {
   signOut() {
     google.accounts.id.disableAutoSelect();
     this.token = null;
-    this.userSubject.next(null);
+
+    this.zone.run(() => {
+      this.userSubject.next(null);
+    });
   }
 
   private decodeJwt(token: string): any {
