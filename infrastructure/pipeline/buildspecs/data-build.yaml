@@ -17,7 +17,7 @@ phases:
 
       - pwd
       - ls -l
-      - cd ./infrastructure
+      - cd ./infrastructure/database
       - ls -l
 
 artifacts:
