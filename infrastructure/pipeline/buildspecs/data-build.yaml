@@ -20,14 +20,6 @@ artifacts:
     - '*'
   secondary-artifacts:
     databaseBuildOutput:
-      base-directory: infrastructure/database
-      files:
-        - '**/*'
-    loadDataBuildOutput:
-      base-directory: processing/load-data
-      files:
-        - '**/*'
-    dropFilesBuildOutput:
-      base-directory: processing/drop-files
+      base-directory: '*'
       files:
         - '**/*'
