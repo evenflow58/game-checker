@@ -15,15 +15,13 @@ phases:
       - echo "packaging packages"
       - npm run package:data
 
-      - pwd
-      - ls -l
-      - cd ./infrastructure/database
-      - ls -l
+      - echo "Listing infra dir"
+      - ls -R infrastructure/database || echo "No database dir found"
 
 artifacts:
   files:
     - '*'
-  secondary-artifacts:
+  secondaryArtifacts:
     databaseBuildOutput:
       base-directory: 'infrastructure/database'
       files:
