@@ -29,7 +29,7 @@ Resources:
     Properties:
       TemplateURL: ./test/template.yaml
       Parameters:
-        ApiGatewayId: !Ref ApiGateway
+        ApiGatewayId: !Ref ApiGatewayId
         RootResourceId: !GetAtt V1Path.RootResourceId
         AuthorizerId: !Ref AuthorizerId
         # TableName: !Ref TableName
