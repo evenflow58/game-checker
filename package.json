@@ -39,6 +39,9 @@
     "package:api:api-gateway": "cd infrastructure/apiGateway && npm run package",
     "package:api:api-gateway-deployment": "cd infrastructure/apiGatewayDeployment && npm run package",
 
+    "package:data": "npm-run-all --parallel package:data:* && cd ../",
+    "package:data:database": "cd infrastructure/database && npm run package",
+
     "package:ui": "npm-run-all --parallel package:ui:* && cd ../",
     "package:ui:edge": "cd infrastructure/url && npm run package",
 

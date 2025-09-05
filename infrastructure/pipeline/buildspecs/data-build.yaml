@@ -1,0 +1,33 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "installing base packages"
+      - npm i
+  build:
+    commands:
+      - echo "packaging packages"
+      - npm run package:data
+
+artifacts:
+  files:
+    - '*'
+  secondary-artifacts:
+    databaseBuildOutput:
+      base-directory: infrastructure/database
+      files:
+        - '**/*'
+    loadDataBuildOutput:
+      base-directory: processing/load-data
+      files:
+        - '**/*'
+    dropFilesBuildOutput:
+      base-directory: processing/drop-files
+      files:
+        - '**/*'
