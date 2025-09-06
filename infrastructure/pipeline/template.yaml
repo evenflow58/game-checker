@@ -223,6 +223,7 @@ Resources:
                 StackName: !Sub ["${Prefix}Stack-API", { "Prefix": !Ref Prefix }]
                 ParameterOverrides: !Sub |
                   {
+                    "TableName": "#{db.DbTableName}",
                     "Prefix": "${Prefix}"
                   }
               RunOrder: 2

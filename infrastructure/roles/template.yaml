@@ -297,13 +297,13 @@ Resources:
                   - apigateway:PATCH
                 Effect: Allow
                 Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::*'
-              # - Action:
-              #     - dynamodb:DescribeTable
-              #     - dynamodb:CreateTable
-              #     - dynamodb:DeleteTable
-              #     - dynamodb:UpdateTable
-              #   Effect: Allow
-              #   Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*'
+              - Action:
+                  - dynamodb:DescribeTable
+                  - dynamodb:CreateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:UpdateTable
+                Effect: Allow
+                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*'
               # - Action:
               #     - SNS:GetTopicAttributes
               #     - SNS:SetTopicAttributes

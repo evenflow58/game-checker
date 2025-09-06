@@ -3,9 +3,9 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: The Game Checker api gateway infrastructure
 
 Parameters:
-  # TableName:
-  #   Type: String
-  #   Description: The name of the table to load data into
+  TableName:
+    Type: String
+    Description: The name of the table to load data into
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
@@ -37,7 +37,7 @@ Resources:
         ApiGatewayId: !Ref ApiGateway
         RootResourceId: !GetAtt ApiGateway.RootResourceId
         AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
-        # TableName: !Ref TableName
+        TableName: !Ref TableName
         Prefix: !Ref Prefix
     DependsOn: Authorizer
 
