@@ -62,6 +62,26 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspecs/api-build.yaml
 
+  DataBuildRunner:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ["${Prefix}DataBuildRunner", { Prefix: !Ref Prefix}] 
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:6.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: BUILD_OUTPUT_BUCKET
+            Value: !ImportValue ArtifactBucketId
+          - Name: S3_BUCKET
+            Value: !ImportValue ArtifactBucketId
+      ServiceRole: !ImportValue BuildExecutionRoleArn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspecs/data-build.yaml
+
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -118,8 +138,41 @@ Resources:
               - Name: apiGatewayBuildOutput
               - Name: apiGatewayDeploymentBuildOutput
             RunOrder: 1
+          - Name: BuildData
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref DataBuildRunner
+            InputArtifacts:
+              - Name: SourceCode
+            OutputArtifacts:
+              - Name: databaseBuildOutput
+            RunOrder: 1
         - Name: Deploy
           Actions:
+            - Name: DeployDatabase
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              InputArtifacts:
+                - Name: databaseBuildOutput
+              Namespace: db
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !ImportValue CloudFormationExecutionRoleArn
+                TemplatePath: databaseBuildOutput::template.package.yaml
+                Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+                StackName: !Sub ["${Prefix}Database", { Prefix: !Ref Prefix}] 
+                ParameterOverrides: !Sub |
+                  {
+                    "Prefix": "${Prefix}"
+                  }
+              RunOrder: 1
             - Name: DeployUrl
               ActionTypeId:
                 Category: Deploy
@@ -170,6 +223,7 @@ Resources:
                 StackName: !Sub ["${Prefix}Stack-API", { "Prefix": !Ref Prefix }]
                 ParameterOverrides: !Sub |
                   {
+                    "TableName": "#{db.DbTableName}",
                     "Prefix": "${Prefix}"
                   }
               RunOrder: 2

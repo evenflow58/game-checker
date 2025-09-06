@@ -12,6 +12,9 @@ Parameters:
   AuthorizerId:
     Type: String
     Description: The ID of the authorizer
+  TableName:
+    Type: String
+    Description: The name of the database table
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
@@ -32,5 +35,5 @@ Resources:
         ApiGatewayId: !Ref ApiGatewayId
         RootResourceId: !GetAtt V1Path.ResourceId
         AuthorizerId: !Ref AuthorizerId
-        # TableName: !Ref TableName
+        TableName: !Ref TableName
         Prefix: !Ref Prefix

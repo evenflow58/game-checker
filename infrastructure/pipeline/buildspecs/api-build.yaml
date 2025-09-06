@@ -21,12 +21,6 @@ phases:
       - echo "packaging authorizer packages"
       - npm run package:api 
 
-      - pwd
-      - ls -l
-      - cd infrastructure/apiGatewayDeployment
-      - pwd
-      - ls -l
-
   # post_build:
   #   commands:
   #     - echo Testing API

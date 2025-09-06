@@ -1,0 +1,27 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "installing base packages"
+      - npm i
+  build:
+    commands:
+      - echo "packaging packages"
+      - npm run package:data
+
+  post_build:
+    commands:
+      - echo "Using buildspec at $CODEBUILD_SRC_DIR/infrastructure/pipeline/buildspecs/data-build.yaml"
+      - sed -n '1,200p' $CODEBUILD_SRC_DIR/infrastructure/pipeline/buildspecs/data-build.yaml || true
+
+
+artifacts:
+  base-directory: infrastructure/database
+  files:
+    - '**/*'

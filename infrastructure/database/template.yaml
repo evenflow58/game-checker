@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The Game Checker Database
+
+Parameters:
+  Prefix:
+    Type: String
+    Description: The prefix for the stack
+    AllowedPattern: "[A-Za-z0-9-]*"
+    Default: ''
+
+Resources:
+  GameCheckerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ["${Prefix}GameCheckerTable", { Prefix: !Ref Prefix }]
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  DbTableName:
+    Value: !Ref GameCheckerTable
+    Description: The table name for Game Checker

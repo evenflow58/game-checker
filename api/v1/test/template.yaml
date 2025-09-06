@@ -15,6 +15,9 @@ Parameters:
   RootResourceId:
     Type: String
     Description: The api gateway resource to attach the endpoint to
+  TableName:
+    Type: String
+    Description: The name of the database table
 
 Resources:
   V1TestApiGatewayResource:
@@ -63,6 +66,9 @@ Resources:
       Architectures:
         - arm64
       Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
 
   V1TestGetEndpoint:
     Type: AWS::ApiGateway::Method
@@ -84,8 +90,7 @@ Resources:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: ""
-            Effect: "Allow"
+          - Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
@@ -94,6 +99,16 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
+      Policies:
+        - PolicyName: DynamoDBQueryPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}
+
 
   Permission:
     Type: AWS::Lambda::Permission
