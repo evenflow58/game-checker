@@ -15,6 +15,12 @@ phases:
       - echo "packaging packages"
       - npm run package:data
 
+  post_build:
+    commands:
+      - echo "Using buildspec at $CODEBUILD_SRC_DIR/infrastructure/pipeline/buildspecs/data-build.yaml"
+      - sed -n '1,200p' $CODEBUILD_SRC_DIR/infrastructure/pipeline/buildspecs/data-build.yaml || true
+
+
 artifacts:
   files:
     - '*'
