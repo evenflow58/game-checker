@@ -1,6 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
+import { Observable, ReplaySubject } from 'rxjs';
 
 declare const google: any;
 
@@ -10,14 +9,28 @@ export class GoogleAuthService {
   user$: Observable<any> = this.userSubject.asObservable();
 
   private token: string | null = null;
+  private readonly STORAGE_KEY = 'google_token';
 
-  constructor(private zone: NgZone) {}
+  constructor(private zone: NgZone) {
+    // Load token from storage if it exists
+    const storedToken = localStorage.getItem(this.STORAGE_KEY);
+    if (storedToken) {
+      this.token = storedToken;
+      const payload = this.decodeJwt(storedToken);
+      this.zone.run(() => {
+        this.userSubject.next(payload);
+      });
+    }
+  }
 
   initClient(clientId: string) {
     google.accounts.id.initialize({
       client_id: clientId,
       callback: (response: any) => this.handleCredentialResponse(response),
     });
+
+    // Optional: Let GIS auto-login silently
+    google.accounts.id.prompt();
   }
 
   renderButton(elementId: string) {
@@ -31,10 +44,13 @@ export class GoogleAuthService {
     const credential = response.credential;
     this.token = credential;
 
+    // Store token in localStorage so it's available after refresh
+    localStorage.setItem(this.STORAGE_KEY, credential);
+
     const payload = this.decodeJwt(credential);
 
     this.zone.run(() => {
-      this.userSubject.next(payload); // triggers all subscribers
+      this.userSubject.next(payload);
     });
   }
 
@@ -45,6 +61,9 @@ export class GoogleAuthService {
   signOut() {
     google.accounts.id.disableAutoSelect();
     this.token = null;
+
+    // Clear storage
+    localStorage.removeItem(this.STORAGE_KEY);
 
     this.zone.run(() => {
       this.userSubject.next(null);
