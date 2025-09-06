@@ -90,8 +90,7 @@ Resources:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: ""
-            Effect: "Allow"
+          - Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
@@ -100,6 +99,16 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
+      Policies:
+        - PolicyName: DynamoDBQueryPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TABLE_NAME}
+
 
   Permission:
     Type: AWS::Lambda::Permission
