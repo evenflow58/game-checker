@@ -22,10 +22,11 @@ phases:
 
 
 artifacts:
+  base-directory: infrastructure/database
   files:
     - '**/*'
-  secondary-artifacts:
-    databaseBuildOutput:
-      base-directory: 'infrastructure/database'
-      files:
-        - '**/*'
+  # secondary-artifacts:
+  #   databaseBuildOutput:
+  #     base-directory: 'infrastructure/database'
+  #     files:
+  #       - '**/*'
