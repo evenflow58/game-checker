@@ -13,12 +13,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     // Replace pk with your actual partition key name
     const queryParams = {
       TableName: TABLE_NAME,
-      KeyConditionExpression: "#pk = :pkValue",
+      KeyConditionExpression: "#id = :pkValue",
       ExpressionAttributeNames: {
-        "#pk": "id", // 👈 replace with your partition key field
+        "#id": "id", // 👈 replace with your partition key field
       },
       ExpressionAttributeValues: {
-        ":pkValue": "entry_type", // 👈 replace with the actual key you want to query
+        ":pkValue": "test", // 👈 replace with the actual key you want to query
       },
     };
 

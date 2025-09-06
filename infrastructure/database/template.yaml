@@ -16,17 +16,17 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
-        - AttributeName: entry_type
+        - AttributeName: data
           AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
-        - AttributeName: entry_type
+        - AttributeName: data
           KeyType: RANGE
       GlobalSecondaryIndexes:
         - IndexName: type-index
           KeySchema:
-            - AttributeName: entry_type
+            - AttributeName: data
               KeyType: HASH
           Projection:
             ProjectionType: ALL
