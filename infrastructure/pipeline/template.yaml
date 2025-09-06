@@ -149,7 +149,6 @@ Resources:
             InputArtifacts:
               - Name: SourceCode
             OutputArtifacts:
-              - Name: DataBuildOutput
               - Name: databaseBuildOutput
             RunOrder: 1
         - Name: Deploy

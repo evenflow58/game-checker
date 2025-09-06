@@ -26,6 +26,6 @@ artifacts:
     - '*'
   secondary-artifacts:
     databaseBuildOutput:
-      base-directory: 'infrastructure/database'
+      # base-directory: 'infrastructure/database'
       files:
         - '**/*'
