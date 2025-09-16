@@ -11,11 +11,13 @@ export const handler = async (
     console.log("Received event:", JSON.stringify(event, null, 2));
 
     try {
-        const token = (event.headers || {})['Auth'];
+        const token = (event.headers || {})['Authorization'];
 
         if (!token) throw new Error("No token present");
 
+        console.log("Token found");
         const { payload } = await verifyGoogleToken(token);
+        console.log("Retreived payload from Google", payload);
 
         // Use Google "sub" (unique user ID) as principalId
         const principalId = payload?.sub;
