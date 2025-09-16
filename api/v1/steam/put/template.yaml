@@ -69,7 +69,8 @@ Resources:
       RestApiId: !Ref ApiGatewayId
       ResourceId: !Ref RootResourceId
       HttpMethod: PUT
-      AuthorizationType: NONE
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref AuthorizerId
       Integration:
         Type: AWS_PROXY
         Credentials: !GetAtt ApiRole.Arn

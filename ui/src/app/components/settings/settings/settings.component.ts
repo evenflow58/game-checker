@@ -7,6 +7,8 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { validateId } from '../../../core/validator/validate-id.validator.js';
 import { SettingsService } from '../../../core/service/api/settings/settings.service.js';
+import { HttpErrorResponse } from '@angular/common/http';
+import { catchError, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
@@ -36,7 +38,12 @@ export class SettingsComponent {
     } else this.steamErrorMessage.set('');
   }
 
-  async linkSteam() {
-    this.settingsApi.put(parseInt(this.steamId.value!));
+  linkSteam() {
+    debugger;
+    this.settingsApi.put(parseFloat(this.steamId.value!))
+      .subscribe({
+        next: (response) => { },
+        error: (error) => { }
+      });
   }
 }
