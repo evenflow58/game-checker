@@ -20,18 +20,12 @@ Parameters:
     Description: The name of the database table
 
 Resources:
-  V1SteamPutApiGatewayResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref ApiGatewayId
-      ParentId: !Ref RootResourceId
-
   V1SteamPutOptionsEndpoint:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref V1SteamPutApiGatewayResource
+      ResourceId: !Ref RootResourceId
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
@@ -73,7 +67,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref V1SteamPutApiGatewayResource
+      ResourceId: !Ref RootResourceId
       HttpMethod: PUT
       AuthorizationType: NONE
       Integration:
