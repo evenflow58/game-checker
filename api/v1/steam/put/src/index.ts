@@ -9,7 +9,7 @@ const ddbDocClient = DynamoDBDocumentClient.from(client);
 const TABLE_NAME = process.env["TABLE_NAME"]!;
 
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2) => {
-    console.log("Event", event)
+    console.log("Event used", event)
     try {
         // await upsertSteamId(ddbDocClient, TABLE_NAME, "", JSON.parse(event.body || "").steamId);
 
