@@ -1,5 +1,4 @@
 import { APIGatewayAuthorizerResult, APIGatewayRequestAuthorizerEventV2, StatementEffect } from "aws-lambda";
-import { createRemoteJWKSet, jwtVerify, JWTPayload } from "jose";
 
 const GOOGLE_ISSUER = "https://accounts.google.com";
 const GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs";
@@ -35,16 +34,15 @@ export const handler = async (
     }
 };
 
-/**
- * Verify Google JWT using jose
- */
-async function verifyGoogleToken(token: string): Promise<{ payload: JWTPayload }> {
+async function verifyGoogleToken(token: string): Promise<any> {
+    const { createRemoteJWKSet, jwtVerify } = await import("jose");
     const jwks = createRemoteJWKSet(new URL(GOOGLE_JWKS_URI));
     return jwtVerify(token, jwks, {
         issuer: GOOGLE_ISSUER,
         audience: CLIENT_ID,
     });
 }
+
 
 // Help function to generate an IAM policy
 function generatePolicy(
