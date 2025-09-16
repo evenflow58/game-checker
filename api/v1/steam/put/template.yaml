@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker api test path
+Description: The Game Checker api set steam id path
 
 Parameters:
   ApiGatewayId:
@@ -20,19 +20,18 @@ Parameters:
     Description: The name of the database table
 
 Resources:
-  V1TestApiGatewayResource:
+  V1SteamPutApiGatewayResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ApiGatewayId
       ParentId: !Ref RootResourceId
-      PathPart: test
 
-  V1TestOptionsEndpoint:
+  V1SteamPutOptionsEndpoint:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref V1TestApiGatewayResource
+      ResourceId: !Ref V1SteamPutApiGatewayResource
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
@@ -40,7 +39,7 @@ Resources:
           - StatusCode: 200
             ResponseParameters:
               method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,PUT'"
               method.response.header.Access-Control-Allow-Origin: "'*'"
             ResponseTemplates:
               application/json: ''
@@ -59,7 +58,7 @@ Resources:
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ["${Prefix}V1TestGet", { Prefix: !Ref Prefix }]
+      FunctionName: !Sub ["${Prefix}V1SteamPut", { Prefix: !Ref Prefix }]
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
@@ -70,12 +69,12 @@ Resources:
         Variables:
           TABLE_NAME: !Ref TableName
 
-  V1TestGetEndpoint:
+  V1SteamPutEndpoint:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref V1TestApiGatewayResource
-      HttpMethod: GET
+      ResourceId: !Ref V1SteamPutApiGatewayResource
+      HttpMethod: PUT
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -107,6 +106,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:Query
+                  - dynamodb:PutItem
                 Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}
 
 
@@ -136,7 +136,7 @@ Resources:
   ApiPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub ["${Prefix}V1TestGetLambdaAccess", { Prefix: !Ref Prefix }]
+      PolicyName: !Sub ["${Prefix}V1SteamPutLambdaAccess", { Prefix: !Ref Prefix }]
       PolicyDocument:
         Version: "2012-10-17"
         Statement:

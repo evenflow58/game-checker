@@ -1,0 +1,19 @@
+{
+  "name": "steam",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Evan Johnson",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm-run-all --parallel build:* && cd ../",
+    "build:put": "cd put && npm run build",
+    "install": "npm-run-all --parallel install:*",
+    "install:put": "cd put && npm i",
+    "package": "npm-run-all package:*",
+    "package:v1": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
+    "package:put": "cd put && npm run package",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

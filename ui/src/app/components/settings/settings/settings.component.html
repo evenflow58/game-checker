@@ -1,9 +1,23 @@
-<p>settings works!</p>
-<mat-accordion>
-    <mat-expansion-panel>
-        <mat-panel-title>Steam</mat-panel-title>
-        <mat-panel-description>
-            Text boxes here
-        </mat-panel-description>
+<mat-accordion multi>
+    <mat-expansion-panel expanded>
+        <mat-expansion-panel-header>
+            <mat-panel-title>Steam</mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <mat-grid-list cols="2" rowHeight="4:1">
+            <mat-grid-tile>
+                <mat-form-field>
+                    <mat-label>Steam Id</mat-label>
+                    <input matInput [formControl]="steamId" />
+
+                    @if (steamId.invalid) {
+                        <mat-error>{{steamErrorMessage()}}</mat-error>
+                      }
+                </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile>
+                <button matButton="filled" (click)="linkSteam()" [disabled]="this.steamId.invalid">Link</button>
+            </mat-grid-tile>
+        </mat-grid-list>
     </mat-expansion-panel>
 </mat-accordion>

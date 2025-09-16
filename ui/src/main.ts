@@ -8,6 +8,7 @@ import { AuthInterceptor } from './app/core/interceptor/auth.interceptor.js';
 import { GoogleAuthService } from './app/core/service/google-auth/google-auth.service.js';
 import { routes } from './app/app-routing.module.js';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -17,6 +18,7 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(withInterceptorsFromDi()),
     provideRouter(routes),
     provideAnimationsAsync(),
+    provideAnimations(),
 
     // Register your interceptor
     {
