@@ -37,3 +37,14 @@ Resources:
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
+
+  Steam:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./steam/template.yaml
+      Parameters:
+        ApiGatewayId: !Ref ApiGatewayId
+        RootResourceId: !GetAtt V1Path.ResourceId
+        AuthorizerId: !Ref AuthorizerId
+        TableName: !Ref TableName
+        Prefix: !Ref Prefix

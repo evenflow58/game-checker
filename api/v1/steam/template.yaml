@@ -33,7 +33,7 @@ Resources:
       TemplateURL: ./setId/template.yaml
       Parameters:
         ApiGatewayId: !Ref ApiGatewayId
-        RootResourceId: !GetAtt V1Path.ResourceId
+        RootResourceId: !GetAtt SteamPath.ResourceId
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
