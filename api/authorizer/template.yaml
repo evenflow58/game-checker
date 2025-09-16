@@ -34,7 +34,7 @@ Resources:
     Properties:
       RestApiId: !Ref ApiGatewayId
       Name: SocialAuthorizer
-      Type: TOKEN
+      Type: REQUEST
       IdentitySource: method.request.header.Authorization
       AuthorizerUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GatewayAuthorizerLambda.Arn}/invocations
       AuthorizerResultTtlInSeconds: 3600
