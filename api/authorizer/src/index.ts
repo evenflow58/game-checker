@@ -15,7 +15,7 @@ export const handler = async (
 
         if (!token) throw new Error("No token present");
 
-        console.log("Token found");
+        console.log("Token found", token);
         const { payload } = await verifyGoogleToken(token);
         console.log("Retreived payload from Google", payload);
 

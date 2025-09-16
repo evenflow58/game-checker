@@ -11,7 +11,7 @@ phases:
       - echo "installing base packages"
       - npm i
 
-      - echo Installing API packages
+      - echo "Installing API packages"
       - npm run install:api
   build:
     commands:
