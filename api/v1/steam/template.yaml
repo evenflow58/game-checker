@@ -27,10 +27,10 @@ Resources:
       RestApiId: !Ref ApiGatewayId
       PathPart: steam
 
-  SetId:
+  Put:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./setId/template.yaml
+      TemplateURL: ./put/template.yaml
       Parameters:
         ApiGatewayId: !Ref ApiGatewayId
         RootResourceId: !GetAtt SteamPath.ResourceId
