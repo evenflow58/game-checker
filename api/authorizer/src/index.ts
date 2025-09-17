@@ -25,10 +25,8 @@ export const handler = async (
         }
 
         const token = parts[1];
-        console.log("Token found:", token);
 
         const { payload } = await verifyGoogleToken(token);
-        console.log("Retrieved payload from Google:", payload);
 
         const principalId = payload?.sub;
         if (!principalId) throw new Error("No Google identity returned");
@@ -36,7 +34,7 @@ export const handler = async (
         return generateAllow(
             principalId,
             event.routeArn,
-            { email: payload['email'] as string ?? "" }
+            { email: payload['email'] as string }
         );
 
     } catch (err) {

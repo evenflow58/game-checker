@@ -14,6 +14,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
         // await upsertSteamId(ddbDocClient, TABLE_NAME, "", JSON.parse(event.body || "").steamId);
 
         return {
+            body: "Success!",
             statusCode: 200,
             headers: {
                 "Access-Control-Allow-Origin": "*",
