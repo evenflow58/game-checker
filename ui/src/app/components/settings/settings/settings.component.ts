@@ -39,7 +39,6 @@ export class SettingsComponent {
   }
 
   linkSteam() {
-    debugger;
     this.settingsApi.put(parseFloat(this.steamId.value!))
       .subscribe({
         next: (response) => { },

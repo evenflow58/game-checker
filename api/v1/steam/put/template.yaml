@@ -25,8 +25,7 @@ Resources:
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref ApiGatewayId
-      # ResourceId: !Ref RootResourceId
-      ResourceId: oyb74s14i3
+      ResourceId: !Ref RootResourceId
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
@@ -68,8 +67,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGatewayId
-      # ResourceId: !Ref RootResourceId
-      ResourceId: oyb74s14i3
+      ResourceId: !Ref RootResourceId
       HttpMethod: PUT
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref AuthorizerId

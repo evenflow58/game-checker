@@ -76,7 +76,8 @@ Resources:
       RestApiId: !Ref ApiGatewayId
       ResourceId: !Ref V1TestApiGatewayResource
       HttpMethod: GET
-      AuthorizationType: NONE
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref AuthorizerId
       Integration:
         Type: AWS_PROXY
         Credentials: !GetAtt ApiRole.Arn
