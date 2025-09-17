@@ -25,7 +25,8 @@ Resources:
     Properties:
       AuthorizationType: NONE
       RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref RootResourceId
+      # ResourceId: !Ref RootResourceId
+      ResourceId: oyb74s14i3
       HttpMethod: OPTIONS
       Integration:
         Type: MOCK
