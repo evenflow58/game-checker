@@ -23,7 +23,6 @@ Resources:
       TemplateURL: ./steam/template.yaml
       Parameters:
         HttpApi: !Ref HttpApiId
-        RootResourceId: !GetAtt V1Path.ResourceId
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
