@@ -66,7 +66,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref HttpApi
-      RouteKey: PUT /steam
+      RouteKey: PUT /v1/steam
       Target: !Sub integrations/${SteamIntegration}
       AuthorizationType: CUSTOM
       AuthorizerId: !Ref AuthorizerId
