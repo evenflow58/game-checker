@@ -13,6 +13,6 @@ export class SettingsService {
 
   put(steamId: number): Observable<void> {
     // return this.http.put<void>(`${this.baseUrl}/v1/steam`, { steamId });
-    return this.http.get<void>(`${this.baseUrl}/v1/test`);
+    return this.http.get<void>(`${this.baseUrl}/health`);
   }
 }

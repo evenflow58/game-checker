@@ -64,7 +64,7 @@ Resources:
   HealthApiGatewayResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ApiGatewayId
+      RestApiId: !Ref ApiGateway
       ParentId: !GetAtt ApiGateway.RootResourceId
       PathPart: health
 
@@ -72,7 +72,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
-      RestApiId: !Ref ApiGatewayId
+      RestApiId: !Ref ApiGateway
       ResourceId: !Ref HealthApiGatewayResource
       HttpMethod: OPTIONS
       Integration:
@@ -111,7 +111,7 @@ Resources:
   GetEndpoint:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ApiGatewayId
+      RestApiId: !Ref ApiGateway
       ResourceId: !Ref HealthApiGatewayResource
       HttpMethod: GET
       # AuthorizationType: NONE
