@@ -13,36 +13,32 @@ Parameters:
     Type: String
 
 Resources:
-  ProdDeployment:
-    Type: AWS::ApiGateway::Deployment
-    Properties:
-      RestApiId: !Ref ApiGatewayId
-      StageName: prod
-
-  ApiGatewayDomainName:
-    Type: AWS::ApiGateway::DomainName
+  # Custom Domain for HTTP API
+  HttpApiDomainName:
+    Type: AWS::ApiGatewayV2::DomainName
     Properties:
       DomainName: !Ref BasePathDomain
-      RegionalCertificateArn: !ImportValue CloudFrontCertArn
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
+      DomainNameConfigurations:
+        - CertificateArn: !ImportValue CloudFrontCertArn
+          EndpointType: REGIONAL
 
-  ApiGatewayDomainMapping:
-    Type: AWS::ApiGateway::BasePathMapping
+  # Mapping the domain to your API
+  HttpApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
     Properties:
-      Stage: prod
-      DomainName: !Ref ApiGatewayDomainName
-      RestApiId: !Ref ApiGatewayId
-    DependsOn: ApiGatewayDomainName
+      ApiId: !Ref HttpApiId
+      DomainName: !Ref HttpApiDomainName
+      Stage: '$default'
+    DependsOn: HttpApiDomainName
 
+  # Route53 alias record for the custom domain
   RecordSet:
     Type: AWS::Route53::RecordSet
     Properties:
       AliasTarget:
-        DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
+        DNSName: !GetAtt HttpApiDomainName.DomainNameConfigurations[0].ApiGatewayDomainName
         EvaluateTargetHealth: false
-        HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
+        HostedZoneId: !GetAtt HttpApiDomainName.DomainNameConfigurations[0].HostedZoneId
       HostedZoneId: !Ref HostedZoneId
       Name: !Join [ "", [ !Ref BasePathDomain, "." ] ]
       Type: A

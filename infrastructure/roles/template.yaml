@@ -295,6 +295,7 @@ Resources:
                   - apigateway:PUT
                   - apigateway:POST
                   - apigateway:PATCH
+                  - apigateway:TagResource
                 Effect: Allow
                 Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::*'
               - Action:
