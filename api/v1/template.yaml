@@ -6,9 +6,9 @@ Parameters:
   HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  RootResourceId:
-    Type: String
-    Description: The ID of the root resource of the api gateway
+  # RootResourceId:
+  #   Type: String
+  #   Description: The ID of the root resource of the api gateway
   AuthorizerId:
     Type: String
     Description: The ID of the authorizer

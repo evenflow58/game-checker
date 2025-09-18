@@ -60,6 +60,7 @@ Resources:
         HttpApi: !Ref HttpApi
         Prefix: !Ref Prefix
         AuthorizerId: !Ref GoogleJWTAuthorizer
+        TableName: !Ref TableName
 
 Outputs:
   HttpApiId:
