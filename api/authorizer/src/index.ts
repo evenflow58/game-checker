@@ -31,11 +31,15 @@ export const handler = async (
         const principalId = payload?.sub;
         if (!principalId) throw new Error("No Google identity returned");
 
-        return generateAllow(
+        const allow = generateAllow(
             principalId,
             event.routeArn,
             { email: payload['email'] as string }
         );
+
+        console.log("Returning allow", allow);
+
+        return allow;
 
     } catch (err) {
         console.error("❌ Google auth failed:", err);
