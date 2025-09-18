@@ -6,9 +6,6 @@ Parameters:
   HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  AuthorizerId:
-    Type: String
-    Description: The ID of the authorizer
   TableName:
     Type: String
     Description: The name of the database table
@@ -29,4 +26,3 @@ Resources:
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
-        AuthorizerId: !Ref AuthorizerId
