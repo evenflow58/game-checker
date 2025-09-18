@@ -21,7 +21,7 @@ Resources:
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Prefix}GetSteam"
+      FunctionName: !Sub "${Prefix}PutSteam"
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x

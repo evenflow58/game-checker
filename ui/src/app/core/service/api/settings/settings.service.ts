@@ -11,7 +11,7 @@ export class SettingsService {
 
   constructor(private http: HttpClient) { }
 
-  put(steamId: number): Observable<void> {
+  put(steamId: string): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/v1/steam`, { steamId });
   }
 }

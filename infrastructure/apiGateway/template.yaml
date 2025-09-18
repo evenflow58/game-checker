@@ -53,72 +53,16 @@ Resources:
         HttpApi: !Ref HttpApi
         Prefix: !Ref Prefix
 
-  # V1:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: ../../api/v1/template.yaml
-  #     Parameters:
-  #       HttpApi: !Ref HttpApi
-  #       Prefix: !Ref Prefix
-  #       AuthorizerId: !Ref GoogleJWTAuthorizer
-  #       TableName: !Ref TableName
-
-  # Lambda to handle PUT /steam
-  Function:
-    Type: AWS::Serverless::Function
+  V1:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      FunctionName: !Sub "${Prefix}GetSteam"
-      CodeUri: ../../api/v1/steam/put/dist/out-tsc
-      Handler: index.handler
-      Runtime: nodejs22.x
-      Architectures:
-        - arm64
-      Role: !GetAtt LambdaRole.Arn
+      TemplateURL: ../../api/v1/template.yaml
+      Parameters:
+        HttpApi: !Ref HttpApi
+        Prefix: !Ref Prefix
+        AuthorizerId: !Ref GoogleJWTAuthorizer
+        TableName: !Ref TableName
 
-  # Permission for API Gateway to invoke Lambda
-  Permission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Function
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
-
-  # Lambda Execution Role
-  LambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Path: /
-
-  # Integration: HTTP API -> Lambda
-  SteamIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref HttpApi
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
-      PayloadFormatVersion: "2.0"
-
-  # Route for PUT /steam with Google JWT auth
-  SteamRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref HttpApi
-      RouteKey: PUT /v1/steam
-      Target: !Sub integrations/${SteamIntegration}
-      AuthorizationType: JWT
-      AuthorizerId: !Ref GoogleJWTAuthorizer
 
 Outputs:
   HttpApiId:

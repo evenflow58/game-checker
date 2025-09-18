@@ -11,6 +11,9 @@ const TABLE_NAME = process.env["TABLE_NAME"]!;
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2) => {
     console.log("Event used", event)
     try {
+        const ctx = event.requestContext as any;
+        console.log("Authorizer", JSON.stringify(ctx.authorizer));
+
         // await upsertSteamId(ddbDocClient, TABLE_NAME, "", JSON.parse(event.body || "").steamId);
 
         return {
