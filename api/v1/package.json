@@ -9,7 +9,6 @@
   "scripts": {
     "build": "npm-run-all --parallel build:* && cd ../",
     "build:steam": "cd steam && npm run build",
-    "build:test": "cd test && npm run build",
     "install": "npm-run-all --parallel install:*",
     "install:steam": "cd steam && npm i",
     "package": "npm-run-all package:*",
