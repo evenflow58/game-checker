@@ -3,63 +3,19 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: The Game Checker api army path
 
 Parameters:
-  ApiGatewayId:
+  HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  # AuthorizerId:
-  #   Type: String
-  #   Description: The ID of the authorizer
-  # TableName:
-  #   Type: String
-  #   Description: The name of the table to load data into
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
-  RootResourceId:
-    Type: String
-    Description: The api gateway resource to attach the endpoint to
 
 Resources:
-  HealthApiGatewayResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref ApiGatewayId
-      ParentId: !Ref RootResourceId
-      PathPart: health
-
-  HealthOptionsEndpoint:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref HealthApiGatewayResource
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            ResponseTemplates:
-              application/json: ''
-        PassthroughBehavior: NEVER
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
-          ResponseModels:
-            application/json: 'Empty'
-
+  # Lambda to handle GET /health
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ["${Prefix}GetHealth", { Prefix: !Ref Prefix }]
+      FunctionName: !Sub "${Prefix}GetHealth"
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
@@ -67,30 +23,23 @@ Resources:
         - arm64
       Role: !GetAtt LambdaRole.Arn
 
-  GetEndpoint:
-    Type: AWS::ApiGateway::Method
+  # Permission for API Gateway to invoke Lambda
+  Permission:
+    Type: AWS::Lambda::Permission
     Properties:
-      RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref HealthApiGatewayResource
-      HttpMethod: GET
-      # AuthorizationType: NONE
-      AuthorizationType: CUSTOM
-      AuthorizerId: !Ref AuthorizerId
-      Integration:
-        Type: AWS_PROXY
-        Credentials: !GetAtt ApiRole.Arn
-        TimeoutInMillis: 29000
-        IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations'
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
 
+  # Lambda Execution Role
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: ""
-            Effect: "Allow"
+          - Effect: "Allow"
             Principal:
               Service:
                 - lambda.amazonaws.com
@@ -100,38 +49,20 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
 
-  Permission:
-    Type: AWS::Lambda::Permission
+  # Integration: HTTP API -> Lambda
+  HealthIntegration:
+    Type: AWS::ApiGatewayV2::Integration
     Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Function
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayId}/*
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
+      PayloadFormatVersion: "2.0"
 
-  ApiRole:
-    Type: AWS::IAM::Role
+  # Route for GET /health with Google JWT auth
+  HealthRoute:
+    Type: AWS::ApiGatewayV2::Route
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: ""
-            Effect: "Allow"
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-
-  ApiPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub ["${Prefix}GetHealthLambdaAccess", { Prefix: !Ref Prefix }]
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Action: "lambda:*"
-            Resource: !GetAtt Function.Arn
-      Roles:
-        - !Ref ApiRole
+      ApiId: !Ref HttpApi
+      RouteKey: GET /health
+      Target: !Sub integrations/${HealthIntegration}
+      AuthorizationType: NONE

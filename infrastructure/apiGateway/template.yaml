@@ -9,9 +9,10 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
-  # GoogleClientId:
-  #   Type: String
-  #   Description: Your Google OAuth Client ID
+  GoogleClientId:
+    Type: String
+    Description: Your Google OAuth Client ID
+    Default: 526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com
 
 Resources:
   # Create the HTTP API
@@ -40,73 +41,16 @@ Resources:
       JwtConfiguration:
         Issuer: "https://accounts.google.com"
         Audience:
-          - 526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com
+          - !Ref GoogleClientId
       Name: GoogleJWTAuthorizer
 
-  # Lambda to handle GET /health
-  Function:
-    Type: AWS::Serverless::Function
+  Health:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      FunctionName: !Sub "${Prefix}GetHealth"
-      CodeUri: ../../api/health/dist/out-tsc
-      Handler: index.handler
-      Runtime: nodejs22.x
-      Architectures:
-        - arm64
-      Role: !GetAtt LambdaRole.Arn
-
-  # Permission for API Gateway to invoke Lambda
-  Permission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Function
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
-
-  # Lambda Execution Role
-  LambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Path: /
-
-  # Integration: HTTP API -> Lambda
-  HealthIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref HttpApi
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
-      PayloadFormatVersion: "2.0"
-
-  # Route for GET /health with Google JWT auth
-  HealthRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref HttpApi
-      RouteKey: GET /health
-      Target: !Sub integrations/${HealthIntegration}
-      AuthorizationType: JWT
-      AuthorizerId: !Ref GoogleJWTAuthorizer
-
-  # Stage with auto deploy
-  HttpApiStage:
-    Type: AWS::ApiGatewayV2::Stage
-    Properties:
-      ApiId: !Ref HttpApi
-      StageName: '$default'
-      AutoDeploy: true
+      TemplateURL: ../../api/health/template.yaml
+      Parameters:
+        HttpApi: !Ref HttpApi
+        Prefix: !Ref Prefix
 
 Outputs:
   HttpApiId:

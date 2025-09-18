@@ -13,6 +13,14 @@ Parameters:
     Type: String
 
 Resources:
+  # Stage with auto deploy
+  HttpApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: '$default'
+      AutoDeploy: true
+      
   # Custom Domain for HTTP API
   HttpApiDomainName:
     Type: AWS::ApiGatewayV2::DomainName
