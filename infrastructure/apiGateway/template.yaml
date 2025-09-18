@@ -101,7 +101,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ["${Prefix}GetHealth", { Prefix: !Ref Prefix }]
-      CodeUri: ../../../api/health/dist/out-tsc
+      CodeUri: ../../api/health/dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
       Architectures:
