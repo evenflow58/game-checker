@@ -9,7 +9,7 @@ Parameters:
   HostedZoneId:
     Type: String
     Default: Z02241462DXLIC7B4J76X
-  ApiGatewayId:
+  HttpApiId:
     Type: String
 
 Resources:
