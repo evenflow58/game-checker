@@ -3,7 +3,7 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: The Game Checker V1 api gateway code
 
 Parameters:
-  ApiGatewayId:
+  HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
   RootResourceId:
@@ -20,31 +20,20 @@ Parameters:
     AllowedPattern: "[A-Za-z0-9-]*"
 
 Resources:
-  V1Path:
-    Type: AWS::ApiGateway::Resource
+  # Route for /v1
+  V1Route:
+    Type: AWS::ApiGatewayV2::Route
     Properties:
-      ParentId: !Ref RootResourceId
-      RestApiId: !Ref ApiGatewayId
-      PathPart: v1
+      ApiId: !Ref HttpApi
+      RouteKey: 'ANY /v1'
 
-  Test:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./test/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGatewayId
-        RootResourceId: !GetAtt V1Path.ResourceId
-        AuthorizerId: !Ref AuthorizerId
-        TableName: !Ref TableName
-        Prefix: !Ref Prefix
-
-  Steam:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./steam/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGatewayId
-        RootResourceId: !GetAtt V1Path.ResourceId
-        AuthorizerId: !Ref AuthorizerId
-        TableName: !Ref TableName
-        Prefix: !Ref Prefix
+  # Steam:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: ./steam/template.yaml
+  #     Parameters:
+  #       HttpApi: !Ref HttpApiId
+  #       RootResourceId: !GetAtt V1Path.ResourceId
+  #       AuthorizerId: !Ref AuthorizerId
+  #       TableName: !Ref TableName
+  #       Prefix: !Ref Prefix

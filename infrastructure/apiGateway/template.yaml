@@ -52,6 +52,15 @@ Resources:
         HttpApi: !Ref HttpApi
         Prefix: !Ref Prefix
 
+  V1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ../../api/v1/template.yaml
+      Parameters:
+        HttpApi: !Ref HttpApi
+        Prefix: !Ref Prefix
+        AuthorizerId: !Ref GoogleJWTAuthorizer
+
 Outputs:
   HttpApiId:
     Description: ID of the HTTP API
