@@ -12,6 +12,9 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
+  AuthorizerId:
+    Type: String
+    Description: The ID of the authorizer
 
 Resources:
   # Lambda to handle PUT /steam

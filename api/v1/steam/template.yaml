@@ -15,6 +15,9 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
+  AuthorizerId:
+    Type: String
+    Description: The ID of the authorizer
 
 Resources:
   SteamPut:
@@ -26,3 +29,4 @@ Resources:
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
+        AuthorizerId: !Ref AuthorizerId
