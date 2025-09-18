@@ -71,5 +71,5 @@ Resources:
       ApiId: !Ref HttpApi
       RouteKey: PUT /v1/steam
       Target: !Sub integrations/${SteamIntegration}
-      AuthorizationType: CUSTOM
+      AuthorizationType: JWT
       AuthorizerId: !Ref AuthorizerId
