@@ -22,7 +22,7 @@ Resources:
     Properties:
       TemplateURL: ./put/template.yaml
       Parameters:
-        HttpApi: !Ref HttpApiId
+        HttpApi: !Ref HttpApi
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
