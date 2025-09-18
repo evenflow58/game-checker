@@ -67,7 +67,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Prefix}GetSteam"
-      CodeUri: ../../api/v1/stea/put/dist/out-tsc
+      CodeUri: ../../api/v1/steam/put/dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
       Architectures:
