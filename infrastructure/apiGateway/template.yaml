@@ -25,8 +25,9 @@ Resources:
         AllowOrigins:
           - '*'
         AllowMethods:
-          - GET
           - OPTIONS
+          - GET
+          - PUT
         AllowHeaders:
           - '*'
 
