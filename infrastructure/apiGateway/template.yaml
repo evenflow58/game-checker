@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
-Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker api gateway infrastructure
+Transform: AWS::Serverless-2016-10-31
+Description: The Game Checker HTTP API with Google JWT Auth
 
 Parameters:
   TableName:
@@ -9,98 +9,45 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
+  GoogleClientId:
+    Type: String
+    Description: Your Google OAuth Client ID
 
 Resources:
-  ApiGateway: 
-    Type: AWS::ApiGateway::RestApi
+  # Create the HTTP API
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
     Properties:
-      Description: The Game Checker API
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      Name: !Sub ["${Prefix}ApiGateway", Prefix: !Ref Prefix]
+      Name: !Sub "${Prefix}HttpApi"
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowHeaders:
+          - '*'
 
-  Authorizer:
-    Type: AWS::CloudFormation::Stack
-    DependsOn: ApiGateway
+  # Google JWT Authorizer
+  GoogleJWTAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
     Properties:
-      TemplateURL: ../../api/authorizer/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGateway
-        Prefix: !Ref Prefix
+      ApiId: !Ref HttpApi
+      AuthorizerType: JWT
+      IdentitySource:
+        - "$request.header.Authorization"
+      JwtConfiguration:
+        Issuer: "https://accounts.google.com"
+        Audience:
+          - 526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com
+      Name: GoogleJWTAuthorizer
 
-  V1:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ../../api/v1/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGateway
-        RootResourceId: !GetAtt ApiGateway.RootResourceId
-        AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
-        TableName: !Ref TableName
-        Prefix: !Ref Prefix
-    DependsOn: Authorizer
-
-  # Health:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: ../../api/health/template.yaml
-  #     Parameters:
-  #       ApiGatewayId: !Ref ApiGateway
-  #       RootResourceId: !GetAtt ApiGateway.RootResourceId
-  #       Prefix: !Ref Prefix
-
-  # V2:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: ../../../api/v2/template.yaml
-  #     Parameters:
-  #       ApiGatewayId: !Ref ApiGateway
-  #       RootResourceId: !GetAtt ApiGateway.RootResourceId
-  #       AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
-  #       Prefix: !Ref Prefix
-  #   DependsOn: Authorizer
-
-  HealthApiGatewayResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref ApiGateway
-      ParentId: !GetAtt ApiGateway.RootResourceId
-      PathPart: health
-
-  HealthOptionsEndpoint:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref ApiGateway
-      ResourceId: !Ref HealthApiGatewayResource
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            ResponseTemplates:
-              application/json: ''
-        PassthroughBehavior: NEVER
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
-          ResponseModels:
-            application/json: 'Empty'
-
+  # Lambda to handle GET /health
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ["${Prefix}GetHealth", { Prefix: !Ref Prefix }]
+      FunctionName: !Sub "${Prefix}GetHealth"
       CodeUri: ../../api/health/dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
@@ -108,30 +55,23 @@ Resources:
         - arm64
       Role: !GetAtt LambdaRole.Arn
 
-  GetEndpoint:
-    Type: AWS::ApiGateway::Method
+  # Permission for API Gateway to invoke Lambda
+  Permission:
+    Type: AWS::Lambda::Permission
     Properties:
-      RestApiId: !Ref ApiGateway
-      ResourceId: !Ref HealthApiGatewayResource
-      HttpMethod: GET
-      # AuthorizationType: NONE
-      AuthorizationType: CUSTOM
-      AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
-      Integration:
-        Type: AWS_PROXY
-        Credentials: !GetAtt ApiRole.Arn
-        TimeoutInMillis: 29000
-        IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations'
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
 
+  # Lambda Execution Role
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: ""
-            Effect: "Allow"
+          - Effect: "Allow"
             Principal:
               Service:
                 - lambda.amazonaws.com
@@ -141,47 +81,37 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
 
-  Permission:
-    Type: AWS::Lambda::Permission
+  # Integration: HTTP API -> Lambda
+  HealthIntegration:
+    Type: AWS::ApiGatewayV2::Integration
     Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Function
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
+      PayloadFormatVersion: "2.0"
 
-  ApiRole:
-    Type: AWS::IAM::Role
+  # Route for GET /health with Google JWT auth
+  HealthRoute:
+    Type: AWS::ApiGatewayV2::Route
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: ""
-            Effect: "Allow"
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
+      ApiId: !Ref HttpApi
+      RouteKey: GET /health
+      Target: !Sub integrations/${HealthIntegration}
+      AuthorizationType: JWT
+      AuthorizerId: !Ref GoogleJWTAuthorizer
 
-  ApiPolicy:
-    Type: AWS::IAM::Policy
+  # Stage with auto deploy
+  HttpApiStage:
+    Type: AWS::ApiGatewayV2::Stage
     Properties:
-      PolicyName: !Sub ["${Prefix}GetHealthLambdaAccess", { Prefix: !Ref Prefix }]
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Action: "lambda:*"
-            Resource: !GetAtt Function.Arn
-      Roles:
-        - !Ref ApiRole
+      ApiId: !Ref HttpApi
+      StageName: '$default'
+      AutoDeploy: true
 
 Outputs:
-  ApiGatewayId:
-    Value: !Ref ApiGateway
-    Description: The ID of the api gateway
-
-  RootResourceId:
-    Value: !GetAtt ApiGateway.RootResourceId
-    Description: The ID of the api root resource
+  HttpApiId:
+    Description: ID of the HTTP API
+    Value: !Ref HttpApi
+  HttpApiInvokeUrl:
+    Description: Invoke URL of the HTTP API
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
