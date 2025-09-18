@@ -245,7 +245,6 @@ Resources:
                   - '{
                       "BasePathDomain": "${BasePathDomain}",
                       "HttpApiId": "#{api.HttpApiId}",
-                      "Prefix": "${Prefix}"
                     }'
                   - BasePathDomain: !If [IsProduction, 'api.doiownthatgame.com', !Sub 'api-${GitHubBranch}.doiownthatgame.com']
               RunOrder: 3
