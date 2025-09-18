@@ -242,8 +242,13 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
                 StackName: !Sub ["${Prefix}Stack-Stack-Api-Deployment", { "Prefix": !Ref Prefix }]
                 ParameterOverrides: !Sub
-                  - '{ "BasePathDomain": "${BasePathDomain}", "HttpApiId": "#{api.HttpApiId}", "Prefix": "${Prefix}" }'
+                  - '{
+                      "BasePathDomain": "${BasePathDomain}",
+                      "HttpApiId": "#{api.HttpApiId}",
+                      "Prefix": "${Prefix}"
+                    }'
                   - BasePathDomain: !If [IsProduction, 'api.doiownthatgame.com', !Sub 'api-${GitHubBranch}.doiownthatgame.com']
+                  - Prefix: !Ref Prefix
               RunOrder: 3
 
 Outputs:
