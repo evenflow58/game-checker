@@ -37,7 +37,7 @@ export const handler = async (
             { email: payload['email'] as string }
         );
 
-        console.log("Returning allow", allow);
+        console.log("Returning allow", JSON.stringify(allow));
 
         return allow;
 
