@@ -14,7 +14,7 @@ export const handler = async (
     console.log("Received event:", JSON.stringify(event, null, 2));
 
     try {
-        const authHeader = (event.headers || {})['Authorization'];
+        const authHeader = (event.headers || {})['authorization'];
 
         if (!authHeader) throw new Error("No Authorization header present");
 
