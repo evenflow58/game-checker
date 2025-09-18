@@ -6,9 +6,6 @@ Parameters:
   HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  # RootResourceId:
-  #   Type: String
-  #   Description: The ID of the root resource of the api gateway
   AuthorizerId:
     Type: String
     Description: The ID of the authorizer
@@ -20,13 +17,6 @@ Parameters:
     AllowedPattern: "[A-Za-z0-9-]*"
 
 Resources:
-  # Route for /v1
-  V1Route:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref HttpApi
-      RouteKey: 'ANY /v1'
-
   Steam:
     Type: AWS::CloudFormation::Stack
     Properties:

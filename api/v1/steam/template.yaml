@@ -6,6 +6,9 @@ Parameters:
   HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
+  AuthorizerId:
+    Type: String
+    Description: The ID of the authorizer
   TableName:
     Type: String
     Description: The name of the database table
@@ -14,59 +17,13 @@ Parameters:
     AllowedPattern: "[A-Za-z0-9-]*"
 
 Resources:
-  # Lambda to handle PUT /steam
-  Function:
-    Type: AWS::Serverless::Function
+  SteamPut:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      FunctionName: !Sub "${Prefix}GetSteam"
-      CodeUri: ./dist/out-tsc
-      Handler: index.handler
-      Runtime: nodejs22.x
-      Architectures:
-        - arm64
-      Role: !GetAtt LambdaRole.Arn
-
-  # Permission for API Gateway to invoke Lambda
-  Permission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Function
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
-
-  # Lambda Execution Role
-  LambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Path: /
-
-  # Integration: HTTP API -> Lambda
-  SteamIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref HttpApi
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
-      PayloadFormatVersion: "2.0"
-
-  # Route for PUT /steam with Google JWT auth
-  SteamRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref HttpApi
-      RouteKey: PUT /v1/steam
-      Target: !Sub integrations/${SteamIntegration}
-      AuthorizationType: CUSTOM
-      AuthorizerId: !Ref AuthorizerId
+      TemplateURL: ./put/template.yaml
+      Parameters:
+        HttpApi: !Ref HttpApiId
+        RootResourceId: !GetAtt V1Path.ResourceId
+        AuthorizerId: !Ref AuthorizerId
+        TableName: !Ref TableName
+        Prefix: !Ref Prefix

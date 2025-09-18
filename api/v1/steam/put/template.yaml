@@ -1,90 +1,48 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker api set steam id path
+Description: The Game Checker V1 Steam api gateway code
 
 Parameters:
-  ApiGatewayId:
+  HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  AuthorizerId:
-    Type: String
-    Description: The ID of the authorizer
-  Prefix:
-    Type: String
-    AllowedPattern: "[A-Za-z0-9-]*"
-  RootResourceId:
-    Type: String
-    Description: The api gateway resource to attach the endpoint to
   TableName:
     Type: String
     Description: The name of the database table
+  Prefix:
+    Type: String
+    AllowedPattern: "[A-Za-z0-9-]*"
 
 Resources:
-  V1SteamPutOptionsEndpoint:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref RootResourceId
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,PUT'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            ResponseTemplates:
-              application/json: ''
-        PassthroughBehavior: NEVER
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Origin: true
-          ResponseModels:
-            application/json: 'Empty'
-
+  # Lambda to handle PUT /steam
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ["${Prefix}V1SteamPut", { Prefix: !Ref Prefix }]
+      FunctionName: !Sub "${Prefix}GetSteam"
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
       Architectures:
         - arm64
       Role: !GetAtt LambdaRole.Arn
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref TableName
 
-  V1SteamPutEndpoint:
-    Type: AWS::ApiGateway::Method
+  # Permission for API Gateway to invoke Lambda
+  Permission:
+    Type: AWS::Lambda::Permission
     Properties:
-      RestApiId: !Ref ApiGatewayId
-      ResourceId: !Ref RootResourceId
-      HttpMethod: PUT
-      AuthorizationType: CUSTOM
-      AuthorizerId: !Ref AuthorizerId
-      Integration:
-        Type: AWS_PROXY
-        Credentials: !GetAtt ApiRole.Arn
-        TimeoutInMillis: 29000
-        IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations'
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
 
+  # Lambda Execution Role
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: Allow
+          - Effect: "Allow"
             Principal:
               Service:
                 - lambda.amazonaws.com
@@ -93,49 +51,22 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
-      Policies:
-        - PolicyName: DynamoDBQueryPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:Query
-                  - dynamodb:PutItem
-                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}
 
-  Permission:
-    Type: AWS::Lambda::Permission
+  # Integration: HTTP API -> Lambda
+  SteamIntegration:
+    Type: AWS::ApiGatewayV2::Integration
     Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref Function
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayId}/*
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
+      PayloadFormatVersion: "2.0"
 
-  ApiRole:
-    Type: AWS::IAM::Role
+  # Route for PUT /steam with Google JWT auth
+  SteamRoute:
+    Type: AWS::ApiGatewayV2::Route
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: ""
-            Effect: "Allow"
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-
-  ApiPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub ["${Prefix}V1SteamPutLambdaAccess", { Prefix: !Ref Prefix }]
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Action: "lambda:*"
-            Resource: !GetAtt Function.Arn
-      Roles:
-        - !Ref ApiRole
+      ApiId: !Ref HttpApi
+      RouteKey: PUT /v1/steam
+      Target: !Sub integrations/${SteamIntegration}
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref AuthorizerId
