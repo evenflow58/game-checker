@@ -9,9 +9,9 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
-  GoogleClientId:
-    Type: String
-    Description: Your Google OAuth Client ID
+  # GoogleClientId:
+  #   Type: String
+  #   Description: Your Google OAuth Client ID
 
 Resources:
   # Create the HTTP API
