@@ -8,12 +8,12 @@
   "main": "index.js",
   "scripts": {
     "build": "npm-run-all --parallel build:* && cd ../",
-    "build:settings": "cd steam && npm run build",
+    "build:settings": "cd settings && npm run build",
     "install": "npm-run-all --parallel install:*",
-    "install:settings": "cd steam && npm i",
+    "install:settings": "cd settings && npm i",
     "package": "npm-run-all package:*",
     "package:v1": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
-    "package:settings": "cd steam && npm run package",
+    "package:settings": "cd settings && npm run package",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
