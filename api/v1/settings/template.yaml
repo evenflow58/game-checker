@@ -26,3 +26,13 @@ Resources:
         AuthorizerId: !Ref AuthorizerId
         TableName: !Ref TableName
         Prefix: !Ref Prefix
+
+  SettingsGet:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./get/template.yaml
+      Parameters:
+        HttpApi: !Ref HttpApi
+        AuthorizerId: !Ref AuthorizerId
+        TableName: !Ref TableName
+        Prefix: !Ref Prefix
