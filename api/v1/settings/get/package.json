@@ -1,5 +1,5 @@
 {
-  "name": "put",
+  "name": "get",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -20,8 +20,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.883.0",
-    "@aws-sdk/client-secrets-manager": "^3.891.0",
-    "@aws-sdk/lib-dynamodb": "^3.883.0",
-    "node-fetch": "^3.3.2"
+    "@aws-sdk/lib-dynamodb": "^3.883.0"
   }
 }

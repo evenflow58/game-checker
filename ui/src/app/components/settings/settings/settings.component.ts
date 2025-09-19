@@ -25,7 +25,7 @@ import { catchError, throwError } from 'rxjs';
   styleUrl: './settings.component.css'
 })
 export class SettingsComponent {
-  readonly steamId = new FormControl('', [Validators.required, validateId(/^\d{16}$/)])
+  readonly steamId = new FormControl('', [Validators.required, validateId(/^\d{17}$/)])
   readonly steamErrorMessage = signal('');
 
   constructor(private settingsApi: SettingsService) { }

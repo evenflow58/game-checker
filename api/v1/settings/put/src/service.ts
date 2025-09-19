@@ -1,10 +1,10 @@
 import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
-export async function upsertSteamId(
+export async function upsertSettings(
   dbClient: DynamoDBDocumentClient,
   tableName: string,
   id: string,
-  steamId: string
+  steamId?: string
 ) {
   // Step 1: Get current item
   const getResult = await dbClient.send(
@@ -16,7 +16,12 @@ export async function upsertSteamId(
 
   // Merge existing settings (if any) with steamId
   const existingSettings = getResult.Item?.['settings'] || {};
-  const newSettings = { ...existingSettings, steamId };
+
+  let newSettings = { ...existingSettings };
+
+  if (steamId) {
+    newSettings.steamId = steamId;
+  }
 
   // Step 2: Update the settings map
   const updateResult = await dbClient.send(

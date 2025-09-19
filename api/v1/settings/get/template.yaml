@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker V1 Settings PUT api gateway code
+Description: The Game Checker V1 Settings GET api gateway code
 
 Parameters:
   HttpApi:
@@ -17,11 +17,11 @@ Parameters:
     Description: The ID of the authorizer
 
 Resources:
-  # Lambda to handle PUT /settings
+  # Lambda to handle GET /settings
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Prefix}PatchSettings"
+      FunctionName: !Sub "${Prefix}GetSettings"
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
@@ -64,13 +64,8 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - dynamodb:UpdateItem
                   - dynamodb:GetItem
                 Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*
-              - Effect: "Allow"
-                Action:
-                  - secretsmanager:GetSecretValue
-                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
 
   # Integration: HTTP API -> Lambda
   SettingsIntegration:
@@ -81,12 +76,12 @@ Resources:
       IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
       PayloadFormatVersion: "2.0"
 
-  # Route for PUT /settings with Google JWT auth
+  # Route for GET /settings with Google JWT auth
   SettingsRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref HttpApi
-      RouteKey: PATCH /v1/settings
+      RouteKey: GET /v1/settings
       Target: !Sub integrations/${SettingsIntegration}
       AuthorizationType: JWT
       AuthorizerId: !Ref AuthorizerId
