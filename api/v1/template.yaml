@@ -17,10 +17,10 @@ Parameters:
     AllowedPattern: "[A-Za-z0-9-]*"
 
 Resources:
-  Steam:
+  Settings:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./steam/template.yaml
+      TemplateURL: ./settings/template.yaml
       Parameters:
         HttpApi: !Ref HttpApi
         AuthorizerId: !Ref AuthorizerId

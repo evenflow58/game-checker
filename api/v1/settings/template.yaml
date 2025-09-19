@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker V1 Steam api gateway code
+Description: The Game Checker V1 Settings api gateway code
 
 Parameters:
   HttpApi:
@@ -17,7 +17,7 @@ Parameters:
     Description: The ID of the authorizer
 
 Resources:
-  SteamPut:
+  SettingsPut:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./put/template.yaml

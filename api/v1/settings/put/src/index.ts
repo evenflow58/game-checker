@@ -2,19 +2,27 @@ import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { upsertSteamId } from "./service";
+import { APIGatewayProxyEventV2WithAuth } from "./types";
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = process.env["TABLE_NAME"]!;
 
-export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2) => {
+export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2WithAuth) => {
     console.log("Event used", event)
     try {
-        const ctx = event.requestContext as any;
-        console.log("Authorizer", JSON.stringify(ctx.authorizer));
+        const email = event.requestContext.authorizer?.jwt?.claims?.email;
 
-        // await upsertSteamId(ddbDocClient, TABLE_NAME, "", JSON.parse(event.body || "").steamId);
+        if (!email) {
+            throw new Error("No email found on the token");
+        }
+
+        await upsertSteamId(
+            ddbDocClient, TABLE_NAME,
+            email,
+            JSON.parse(event.body || "").steamId
+        );
 
         return {
             body: "Success!",

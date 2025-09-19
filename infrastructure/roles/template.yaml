@@ -276,6 +276,7 @@ Resources:
                   - s3:PutBucketPolicy
                   - s3:GetBucketPolicy
                   - s3:DeleteBucketPolicy
+                  - s3:GetObject
                 Effect: Allow
                 Resource: arn:aws:s3:::*
               - Action:

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker V1 Steam PUT api gateway code
+Description: The Game Checker V1 Settings PUT api gateway code
 
 Parameters:
   HttpApi:
@@ -17,17 +17,20 @@ Parameters:
     Description: The ID of the authorizer
 
 Resources:
-  # Lambda to handle PUT /steam
+  # Lambda to handle PUT /settings
   Function:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Prefix}PutSteam"
+      FunctionName: !Sub "${Prefix}PatchSettings"
       CodeUri: ./dist/out-tsc
       Handler: index.handler
       Runtime: nodejs22.x
       Architectures:
         - arm64
       Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
 
   # Permission for API Gateway to invoke Lambda
   Permission:
@@ -54,9 +57,19 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
+      Policies: # 👈 Add inline policies here
+        - PolicyName: DynamoDBUpdateItemAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - dynamodb:UpdateItem
+                  - dynamodb:GetItem
+                Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*
 
   # Integration: HTTP API -> Lambda
-  SteamIntegration:
+  SettingsIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref HttpApi
@@ -64,12 +77,12 @@ Resources:
       IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
       PayloadFormatVersion: "2.0"
 
-  # Route for PUT /steam with Google JWT auth
-  SteamRoute:
+  # Route for PUT /settings with Google JWT auth
+  SettingsRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref HttpApi
-      RouteKey: PUT /v1/steam
-      Target: !Sub integrations/${SteamIntegration}
+      RouteKey: PATCH /v1/settings
+      Target: !Sub integrations/${SettingsIntegration}
       AuthorizationType: JWT
       AuthorizerId: !Ref AuthorizerId

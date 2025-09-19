@@ -27,7 +27,7 @@ Resources:
         AllowMethods:
           - OPTIONS
           - GET
-          - PUT
+          - PATCH
         AllowHeaders:
           - '*'
 
