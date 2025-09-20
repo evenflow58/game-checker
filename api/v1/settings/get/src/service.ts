@@ -16,5 +16,5 @@ export async function getSettings(
 
   console.log("getResult", getResult);
   
-  return getResult;
+  return getResult.Item?.['settings'];
 }

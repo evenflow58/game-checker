@@ -19,13 +19,16 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
             throw new Error("No email found on the token");
         }
 
-        await getSettings(
+        const settings = await getSettings(
             ddbDocClient, TABLE_NAME,
             email,
         );
 
+        console.log("Settings", settings);
+
         return {
-            statusCode: 204,
+            statusCode: 200,
+            body: JSON.stringify(settings),
             headers: {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "*",

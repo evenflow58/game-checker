@@ -11,12 +11,12 @@
                     <input matInput [formControl]="steamId" />
 
                     @if (steamId.invalid) {
-                        <mat-error>{{steamErrorMessage()}}</mat-error>
-                      }
+                    <mat-error>{{steamErrorMessage()}}</mat-error>
+                    }
                 </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile>
-                <button matButton="filled" (click)="linkSteam()" [disabled]="this.steamId.invalid">Link</button>
+                <button matButton="filled" (click)="linkSteam()" [disabled]="isButtonDisabled()">Link</button>
             </mat-grid-tile>
         </mat-grid-list>
     </mat-expansion-panel>
