@@ -1,26 +1,36 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker V1 api gateway code
+Description: The Game Checker V1 Settings api gateway code
 
 Parameters:
   HttpApi:
     Type: String
     Description: The ID of the API Gateway this method should be attached to.
-  AuthorizerId:
-    Type: String
-    Description: The ID of the authorizer
   TableName:
     Type: String
     Description: The name of the database table
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
+  AuthorizerId:
+    Type: String
+    Description: The ID of the authorizer
 
 Resources:
-  Settings:
+  SettingsPut:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./settings/template.yaml
+      TemplateURL: ./put/template.yaml
+      Parameters:
+        HttpApi: !Ref HttpApi
+        AuthorizerId: !Ref AuthorizerId
+        TableName: !Ref TableName
+        Prefix: !Ref Prefix
+
+  SettingsGet:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./get/template.yaml
       Parameters:
         HttpApi: !Ref HttpApi
         AuthorizerId: !Ref AuthorizerId

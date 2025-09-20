@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
-Transform: 'AWS::Serverless-2016-10-31'
-Description: The Game Checker api gateway infrastructure
+Transform: AWS::Serverless-2016-10-31
+Description: The Game Checker HTTP API with Google JWT Auth
 
 Parameters:
   TableName:
@@ -9,24 +9,48 @@ Parameters:
   Prefix:
     Type: String
     AllowedPattern: "[A-Za-z0-9-]*"
+  GoogleClientId:
+    Type: String
+    Description: Your Google OAuth Client ID
+    Default: 526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com
 
 Resources:
-  ApiGateway: 
-    Type: AWS::ApiGateway::RestApi
+  # Create the HTTP API
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
     Properties:
-      Description: The Game Checker API
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      Name: !Sub ["${Prefix}ApiGateway", Prefix: !Ref Prefix]
+      Name: !Sub "${Prefix}HttpApi"
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - OPTIONS
+          - GET
+          - PATCH
+        AllowHeaders:
+          - '*'
 
-  Authorizer:
-    Type: AWS::CloudFormation::Stack
-    DependsOn: ApiGateway
+  # Google JWT Authorizer
+  GoogleJWTAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
     Properties:
-      TemplateURL: ../../api/authorizer/template.yaml
+      ApiId: !Ref HttpApi
+      AuthorizerType: JWT
+      IdentitySource:
+        - "$request.header.Authorization"
+      JwtConfiguration:
+        Issuer: "https://accounts.google.com"
+        Audience:
+          - !Ref GoogleClientId
+      Name: GoogleJWTAuthorizer
+
+  Health:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ../../api/health/template.yaml
       Parameters:
-        ApiGatewayId: !Ref ApiGateway
+        HttpApi: !Ref HttpApi
         Prefix: !Ref Prefix
 
   V1:
@@ -34,38 +58,16 @@ Resources:
     Properties:
       TemplateURL: ../../api/v1/template.yaml
       Parameters:
-        ApiGatewayId: !Ref ApiGateway
-        RootResourceId: !GetAtt ApiGateway.RootResourceId
-        AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
+        HttpApi: !Ref HttpApi
+        Prefix: !Ref Prefix
+        AuthorizerId: !Ref GoogleJWTAuthorizer
         TableName: !Ref TableName
-        Prefix: !Ref Prefix
-    DependsOn: Authorizer
 
-  Health:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ../../api/health/template.yaml
-      Parameters:
-        ApiGatewayId: !Ref ApiGateway
-        RootResourceId: !GetAtt ApiGateway.RootResourceId
-        Prefix: !Ref Prefix
-
-  # V2:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: ../../../api/v2/template.yaml
-  #     Parameters:
-  #       ApiGatewayId: !Ref ApiGateway
-  #       RootResourceId: !GetAtt ApiGateway.RootResourceId
-  #       AuthorizerId: !GetAtt Authorizer.Outputs.ApiAuthorizerId
-  #       Prefix: !Ref Prefix
-  #   DependsOn: Authorizer
 
 Outputs:
-  ApiGatewayId:
-    Value: !Ref ApiGateway
-    Description: The ID of the api gateway
-
-  RootResourceId:
-    Value: !GetAtt ApiGateway.RootResourceId
-    Description: The ID of the api root resource
+  HttpApiId:
+    Description: ID of the HTTP API
+    Value: !Ref HttpApi
+  HttpApiInvokeUrl:
+    Description: Invoke URL of the HTTP API
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"

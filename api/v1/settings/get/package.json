@@ -1,24 +1,25 @@
 {
-  "name": "authorizer",
+  "name": "get",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
-  "author": "",
+  "author": "Evan Johnson",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "build": "tsc && cp -r node_modules dist",
     "copy": "Xcopy \"node_modules\" \"dist\\node_modules\" /E/H/C/I/Y",
-    "deploy": "npm run build && npm run copy && cd ./infrastructure && sam build && sam deploy --capabilities CAPABILITY_NAMED_IAM",
+    "deploy": "npm run build && sam build && sam deploy --capabilities CAPABILITY_NAMED_IAM",
     "package": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "jose": "^6.0.13"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.152",
     "@types/node": "^24.3.0",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.883.0",
+    "@aws-sdk/lib-dynamodb": "^3.883.0"
   }
 }

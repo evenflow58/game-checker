@@ -1,0 +1,23 @@
+<mat-accordion multi>
+    <mat-expansion-panel expanded>
+        <mat-expansion-panel-header>
+            <mat-panel-title>Steam</mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <mat-grid-list cols="2" rowHeight="4:1">
+            <mat-grid-tile>
+                <mat-form-field>
+                    <mat-label>Steam Id</mat-label>
+                    <input matInput [formControl]="steamId" />
+
+                    @if (steamId.invalid) {
+                    <mat-error>{{steamErrorMessage()}}</mat-error>
+                    }
+                </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile>
+                <button matButton="filled" (click)="linkSteam()" [disabled]="isButtonDisabled()">Link</button>
+            </mat-grid-tile>
+        </mat-grid-list>
+    </mat-expansion-panel>
+</mat-accordion>

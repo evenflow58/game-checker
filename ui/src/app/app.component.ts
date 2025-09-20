@@ -6,13 +6,14 @@ import { TestApiService } from './core/service/api/test/test.service.js';
 import { environment } from '../environments/environment.js';
 import { filter, switchMap, of, takeUntil, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   standalone: true,
-  imports: [CommonModule, GoogleButtonDirective],
+  imports: [CommonModule, GoogleButtonDirective, RouterOutlet],
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
   title = 'game-checker-ui';
@@ -34,7 +35,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.user$
       .pipe(
         filter(user => !!user), // only when user is logged in
-        switchMap(() => this.testApi.getTest() || of(null)),
+        // switchMap(() => this.testApi.getTest() || of(null)),
         takeUntil(this.destroy$)
       )
       .subscribe(result => {
