@@ -1,4 +1,4 @@
-import { DynamoDBClient, CreateTableCommand, DeleteTableCommand, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, CreateTableCommand, DeleteTableCommand, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { handler } from "../src/index";
@@ -54,7 +54,6 @@ const client = new DynamoDBClient({
     secretAccessKey: "fakeSecretAccessKey",
   },
 });
-const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 beforeAll(async () => {
   // Start MSW Server
@@ -67,6 +66,16 @@ beforeAll(async () => {
       KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
       AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
       BillingMode: "PAY_PER_REQUEST",
+    })
+  );
+
+  await client.send(
+    new PutItemCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        id: { S: "user-123" },
+        settings: { S: JSON.stringify({ theme: "dark", notifications: true }) },
+      },
     })
   );
 

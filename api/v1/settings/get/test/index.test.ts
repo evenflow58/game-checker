@@ -15,7 +15,6 @@ const client = new DynamoDBClient({
     secretAccessKey: "fakeSecretAccessKey",
   },
 });
-const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 beforeAll(async () => {
   // Create table
@@ -27,6 +26,7 @@ beforeAll(async () => {
       BillingMode: "PAY_PER_REQUEST",
     })
   );
+
   // Insert test item
   await client.send(
     new PutItemCommand({
@@ -37,6 +37,7 @@ beforeAll(async () => {
       },
     })
   );
+  
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
   process.env["DYNAMODB_ENDPOINT"] = DYNAMODB_ENDPOINT;

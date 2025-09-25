@@ -32,7 +32,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
     console.log("Event used", event)
     try {
         const TABLE_NAME = process.env["TABLE_NAME"];
-        console.log("TABLE_NAME", TABLE_NAME);
         if (!TABLE_NAME) {
             throw new Error("TABLE_NAME environment variable is not set");
         }
