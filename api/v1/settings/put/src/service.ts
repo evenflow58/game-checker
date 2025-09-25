@@ -14,6 +14,8 @@ export async function upsertSettings(
     })
   );
 
+  console.log("getResult", getResult);
+
   // Merge existing settings (if any) with steamId
   const existingSettings = getResult.Item?.['settings'] || {};
 
@@ -22,8 +24,6 @@ export async function upsertSettings(
   if (steamId) {
     newSettings.steamId = steamId;
   }
-
-  console.log("TABLE_NAME", tableName);
 
   // Step 2: Update the settings map
   const updateResult = await dbClient.send(

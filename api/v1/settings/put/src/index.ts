@@ -3,10 +3,10 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
-import { upsertSettings } from "./service";
-import { APIGatewayProxyEventV2WithAuth } from "./types";
-import { checkSteamProvider } from "./providers/steam";
-import { SteamError } from "./errors/steamError";
+import { upsertSettings } from "./service.js";
+import { APIGatewayProxyEventV2WithAuth } from "./types.js";
+import { checkSteamProvider } from "./providers/steam.js";
+import { SteamError } from "./errors/steamError.js";
 
 function getDyanmoClient(): DynamoDBDocumentClient {
     const clientConfig: any = {
