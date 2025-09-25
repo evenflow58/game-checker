@@ -61,7 +61,7 @@ beforeAll(async () => {
   server.listen();
 
   // Create table
-  await client.send(
+  const result = await client.send(
     new CreateTableCommand({
       TableName: TABLE_NAME,
       KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
@@ -70,8 +70,7 @@ beforeAll(async () => {
     })
   );
 
-  // Wait for table creation
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  console.log("Create table result", result);
 
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
