@@ -55,6 +55,8 @@ const client = new DynamoDBClient({
   },
 });
 
+console.log("DynamoDB Client Config", client.config);
+
 beforeAll(async () => {
   // Start MSW Server
   server.listen({
