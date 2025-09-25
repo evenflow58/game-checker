@@ -6,6 +6,7 @@
     "types": ["node", "jest"],
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
+    "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "strict": true,

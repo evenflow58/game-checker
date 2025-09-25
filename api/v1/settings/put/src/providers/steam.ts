@@ -1,4 +1,4 @@
-import { SteamError } from "../errors/steamError";
+import { SteamError } from "../errors/steamError.js";
 
 export async function checkSteamProvider(steamApiKey: string, steamId: string) {
     try {
