@@ -42,6 +42,10 @@ Resources:
                 - s3:GetObjectVersion
                 - s3:DeleteObject
               Resource: arn:aws:s3:::*
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Github-*"
 
   PipelineInfrastructureRole:
     Type: AWS::IAM::Role

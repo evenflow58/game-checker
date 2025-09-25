@@ -47,6 +47,7 @@
 
     "test-all": "npm-run-all --parallel test:*",
 
+    "test:api": "cd ./api && npm run test && cd ../",
     "test:ui": "cd ./ui && npm run test:ci && cd "
   },
   "author": "Evan Johnson",
