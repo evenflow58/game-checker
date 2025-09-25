@@ -6,8 +6,6 @@ export async function upsertSettings(
   id: string,
   steamId?: string
 ) {
-  console.log("tableName", tableName);
-
   // Step 1: Get current item
   const getResult = await dbClient.send(
     new GetCommand({
@@ -15,8 +13,6 @@ export async function upsertSettings(
       Key: { id },
     })
   );
-
-  console.log("getResult", getResult);
 
   // Merge existing settings (if any) with steamId
   const existingSettings = getResult.Item?.['settings'] || {};

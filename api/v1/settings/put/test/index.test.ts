@@ -92,7 +92,7 @@ beforeEach(() => {
 });
 
 describe("Integration: PUT handler with DynamoDB Local", () => {
-  it.only("successfully validates steam ID with Steam API", async () => {
+  it("successfully validates steam ID with Steam API", async () => {
     const event = {
       body: JSON.stringify({ steamId: "12345" }),
       requestContext: {
@@ -121,8 +121,6 @@ describe("Integration: PUT handler with DynamoDB Local", () => {
         Key: { id: { S: "test@example.com" } },
       })
     );
-
-    console.log("Settings", getResult.Item);
 
     const settings =
       getResult.Item && getResult.Item["settings"] && getResult.Item["settings"]["M"]
