@@ -18,6 +18,7 @@
     "package:get": "cd get && npm run package",
     "package:put": "cd put && npm run package",
     "test": "npm-run-all test:*",
+    "test:get": "cd get && npm run test",
     "test:put": "cd put && npm run test"
   }
 }
