@@ -24,6 +24,8 @@ function getDyanmoClient(): DynamoDBDocumentClient {
         };
     }
 
+    console.log("DynamoDB Client Config", clientConfig);
+
     const client = new DynamoDBClient(clientConfig);
     return DynamoDBDocumentClient.from(client);
 }

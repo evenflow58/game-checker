@@ -23,6 +23,8 @@ export async function upsertSettings(
     newSettings.steamId = steamId;
   }
 
+  console.log("TABLE_NAME", tableName);
+
   // Step 2: Update the settings map
   const updateResult = await dbClient.send(
     new UpdateCommand({

@@ -69,16 +69,6 @@ beforeAll(async () => {
     })
   );
 
-  await client.send(
-    new PutItemCommand({
-      TableName: TABLE_NAME,
-      Item: {
-        id: { S: "user-123" },
-        settings: { S: JSON.stringify({ theme: "dark", notifications: true }) },
-      },
-    })
-  );
-
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
   process.env["DYNAMODB_ENDPOINT"] = DYNAMODB_ENDPOINT;
