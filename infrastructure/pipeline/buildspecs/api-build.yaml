@@ -34,7 +34,7 @@ phases:
       # Run tests but don't fail the build
       - |
         set +e
-        npm test
+        npm test:api
         TEST_EXIT=$?
         set -e
 
