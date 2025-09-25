@@ -5,7 +5,7 @@ import { handler } from "../src/index";
 import { APIGatewayProxyEventV2WithAuth } from "../src/types";
 import { mockClient } from "aws-sdk-client-mock";
 import { Context } from "aws-lambda";
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, passthrough } from 'msw';
 import { setupServer } from 'msw/node';
 
 const TABLE_NAME = "SettingsTestTable";
@@ -57,7 +57,11 @@ const client = new DynamoDBClient({
 
 beforeAll(async () => {
   // Start MSW Server
-  server.listen();
+  server.listen({
+    onUnhandledRequest() {
+      passthrough();
+    }
+  });
 
   // Create table
   await client.send(
