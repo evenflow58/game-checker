@@ -6,6 +6,8 @@ export async function upsertSettings(
   id: string,
   steamId?: string
 ) {
+  console.log("tableName", tableName);
+
   // Step 1: Get current item
   const getResult = await dbClient.send(
     new GetCommand({
