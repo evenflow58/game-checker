@@ -5,7 +5,7 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { getSettings } from "./service";
 import { APIGatewayProxyEventV2WithAuth } from "./types";
 
-function getDyanmolient(): DynamoDBDocumentClient {
+function getDyanmoClient(): DynamoDBDocumentClient {
     const clientConfig: any = {
         region: process.env["AWS_REGION"] || "us-east-1",
     };
@@ -40,7 +40,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
         }
 
         const settings = await getSettings(
-            getDyanmolient(),
+            getDyanmoClient(),
             TABLE_NAME,
             email,
         );

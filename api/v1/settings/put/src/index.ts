@@ -8,14 +8,34 @@ import { APIGatewayProxyEventV2WithAuth } from "./types";
 import { checkSteamProvider } from "./providers/steam";
 import { SteamError } from "./errors/steamError";
 
-const client = new DynamoDBClient({});
-const ddbDocClient = DynamoDBDocumentClient.from(client);
+function getDyanmoClient(): DynamoDBDocumentClient {
+    const clientConfig: any = {
+        region: process.env["AWS_REGION"] || "us-east-1",
+    };
 
-const TABLE_NAME = process.env["TABLE_NAME"]!;
+    if (process.env["DYNAMODB_ENDPOINT"]) {
+        clientConfig.endpoint = process.env["DYNAMODB_ENDPOINT"];
+    }
+
+    if (process.env["AWS_ACCESS_KEY_ID"] && process.env["AWS_SECRET_ACCESS_KEY"]) {
+        clientConfig.credentials = {
+            accessKeyId: process.env["AWS_ACCESS_KEY_ID"],
+            secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"],
+        };
+    }
+
+    const client = new DynamoDBClient(clientConfig);
+    return DynamoDBDocumentClient.from(client);
+}
 
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2WithAuth) => {
     console.log("Event used", event)
     try {
+        const TABLE_NAME = process.env["TABLE_NAME"];
+        if (!TABLE_NAME) {
+            throw new Error("TABLE_NAME environment variable is not set");
+        }
+
         const client = new SecretsManagerClient({ region: process.env["AWS_REGION"] });
 
         const command = new GetSecretValueCommand({ SecretId: "GameChecker/APIKeys" });
@@ -46,7 +66,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
             await checkSteamProvider(steamApiKey, steamId);
 
             await upsertSettings(
-                ddbDocClient, TABLE_NAME,
+                getDyanmoClient(), 
+                TABLE_NAME,
                 email,
                 steamId
             );
