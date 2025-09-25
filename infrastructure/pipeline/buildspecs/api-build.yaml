@@ -15,25 +15,27 @@ phases:
     runtime-versions:
       nodejs: 22
     commands:
-      - echo "installing base packages"
+      - echo "Installing base packages"
       - npm i
 
       - echo "Installing API packages"
       - npm run install:api
+
   build:
     commands:
-      - echo "building packages"
+      - echo "Building packages"
       - npm run build:api
 
-      - echo "packaging authorizer packages"
+      - echo "Packaging authorizer packages"
       - npm run package:api 
 
   post_build:
     commands:
       - echo "Running tests..."
 
-      - echo "Starting DynamoDB Local in Docker..."
-      - docker run -d -p 8000:8000 amazon/dynamodb-local
+      - echo "Starting DynamoDB Local in Docker (host network)..."
+      # Use --network host so localhost:8000 is accessible inside the build container
+      - docker run -d --network host amazon/dynamodb-local
 
       # Wait a bit for the container to start
       - sleep 5
@@ -41,6 +43,7 @@ phases:
       # Run tests but don't fail the build
       - |
         set +e
+        # Point tests at the local DynamoDB
         DYNAMO_ENDPOINT=http://localhost:8000 npm run test:api
         TEST_EXIT=$?
         set -e
