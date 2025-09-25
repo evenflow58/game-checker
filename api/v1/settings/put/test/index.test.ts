@@ -49,19 +49,11 @@ secretsManagerMock.resolves({
 const client = new DynamoDBClient({
   region: "us-east-1",
   endpoint: DYNAMODB_ENDPOINT,
-  credentials: {
-    accessKeyId: "fakeMyKeyId",
-    secretAccessKey: "fakeSecretAccessKey",
-  },
 });
 
 console.log("DynamoDB Client Config", {
   region: "us-east-1",
   endpoint: DYNAMODB_ENDPOINT,
-  credentials: {
-    accessKeyId: "fakeMyKeyId",
-    secretAccessKey: "fakeSecretAccessKey",
-  },
 });
 
 beforeAll(async () => {
@@ -82,12 +74,12 @@ beforeAll(async () => {
     })
   );
 
-  console.log("run command", await client.send(
+  console.log("run command", (await client.send(
     new GetCommand({
       TableName: "SettingsTestTable",
       Key: { id: "test@example.com" },
     })
-  ));
+  )).Item);
 
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
