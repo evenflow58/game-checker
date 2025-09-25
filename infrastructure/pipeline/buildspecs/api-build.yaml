@@ -28,7 +28,7 @@ phases:
       - echo "packaging authorizer packages"
       - npm run package:api 
 
-  post_build:
+    post_build:
     commands:
       - echo "Running tests..."
       # Run tests but don't fail the build
@@ -38,15 +38,14 @@ phases:
         TEST_EXIT=$?
         set -e
 
-      # Extract the token value from JSON secret
-      - GITHUB_TOKEN=$(echo $GITHUB_SECRET | jq -r '.token')
+        # Extract the token value from JSON secret
+        GITHUB_TOKEN=$(echo $GITHUB_SECRET | jq -r '.token')
 
-      # Grab commit ID that CodeBuild checked out
-      - COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
+        # Grab commit ID that CodeBuild checked out
+        COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
 
-      - echo "Posting test results to GitHub status API..."
-      # Build JSON payload
-      - |
+        echo "Posting test results to GitHub status API..."
+        # Build JSON payload
         if [ $TEST_EXIT -ne 0 ]; then
           STATE="failure"
           DESCRIPTION="Tests failed"
@@ -61,7 +60,6 @@ phases:
           -X POST \
           -d "{\"state\": \"$STATE\", \"context\": \"$STATUS_CONTEXT\", \"description\": \"$DESCRIPTION\"}" \
           https://api.github.com/repos/$OWNER/$REPO/statuses/$COMMIT_ID
-        fi
 
 artifacts:
   files:
