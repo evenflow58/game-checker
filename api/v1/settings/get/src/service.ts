@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 export async function getSettings(
   dbClient: DynamoDBDocumentClient,
@@ -12,8 +12,6 @@ export async function getSettings(
       Key: { id },
     })
   );
-
-  console.log("getResult", getResult);
   
   return getResult.Item?.['settings'];
 }

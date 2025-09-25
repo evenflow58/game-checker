@@ -11,7 +11,7 @@
     "copy": "Xcopy \"node_modules\" \"dist\\node_modules\" /E/H/C/I/Y",
     "deploy": "npm run build && sam build && sam deploy --capabilities CAPABILITY_NAMED_IAM",
     "package": "sam package --template-file template.yaml --s3-bucket $S3_BUCKET --s3-prefix url --output-template-file ./template.package.yaml",
-    "test": "jest --coverage"
+    "test": "sh script/test.sh"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.152",

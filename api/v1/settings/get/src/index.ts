@@ -5,8 +5,25 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { getSettings } from "./service";
 import { APIGatewayProxyEventV2WithAuth } from "./types";
 
-const client = new DynamoDBClient({});
-const ddbDocClient = DynamoDBDocumentClient.from(client);
+function getDyanmolient(): DynamoDBDocumentClient {
+    const clientConfig: any = {
+        region: process.env["AWS_REGION"] || "us-east-1",
+    };
+
+    if (process.env["DYNAMODB_ENDPOINT"]) {
+        clientConfig.endpoint = process.env["DYNAMODB_ENDPOINT"];
+    }
+
+    if (process.env["AWS_ACCESS_KEY_ID"] && process.env["AWS_SECRET_ACCESS_KEY"]) {
+        clientConfig.credentials = {
+            accessKeyId: process.env["AWS_ACCESS_KEY_ID"],
+            secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"],
+        };
+    }
+
+    const client = new DynamoDBClient(clientConfig);
+    return DynamoDBDocumentClient.from(client);
+}
 
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2WithAuth) => {
     console.log("Event used", event)
@@ -23,12 +40,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
         }
 
         const settings = await getSettings(
-            ddbDocClient, 
+            getDyanmolient(),
             TABLE_NAME,
             email,
         );
-
-        console.log("Settings", settings);
 
         return {
             statusCode: 200,
