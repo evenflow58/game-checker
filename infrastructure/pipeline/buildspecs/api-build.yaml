@@ -31,10 +31,17 @@ phases:
   post_build:
     commands:
       - echo "Running tests..."
+
+      - echo "Starting DynamoDB Local in Docker..."
+      - docker run -d -p 8000:8000 amazon/dynamodb-local
+
+      # Wait a bit for the container to start
+      - sleep 5
+
       # Run tests but don't fail the build
       - |
         set +e
-        npm run test:api
+        DYNAMO_ENDPOINT=http://localhost:8000 npm run test:api
         TEST_EXIT=$?
         set -e
 
