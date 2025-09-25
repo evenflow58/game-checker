@@ -70,6 +70,9 @@ beforeAll(async () => {
     })
   );
 
+  // Wait for table creation
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
   process.env["DYNAMODB_ENDPOINT"] = DYNAMODB_ENDPOINT;
