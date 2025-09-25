@@ -4,7 +4,6 @@ export async function getSettings(
   dbClient: DynamoDBDocumentClient,
   tableName: string,
   id: string,
-  steamId?: string
 ) {
   // Step 1: Get current item
   const getResult = await dbClient.send(

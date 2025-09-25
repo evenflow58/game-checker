@@ -8,19 +8,23 @@ import { APIGatewayProxyEventV2WithAuth } from "./types";
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
-const TABLE_NAME = process.env["TABLE_NAME"]!;
-
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2WithAuth) => {
     console.log("Event used", event)
     try {
+        const TABLE_NAME = process.env["TABLE_NAME"]!;
         const email = event.requestContext.authorizer?.jwt?.claims?.email;
+
+        if (!TABLE_NAME) {
+            throw new Error("TABLE_NAME is not set");
+        }
 
         if (!email) {
             throw new Error("No email found on the token");
         }
 
         const settings = await getSettings(
-            ddbDocClient, TABLE_NAME,
+            ddbDocClient, 
+            TABLE_NAME,
             email,
         );
 
