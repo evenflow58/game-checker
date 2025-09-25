@@ -1,5 +1,5 @@
 import { DynamoDBClient, CreateTableCommand, DeleteTableCommand, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { handler } from "../src/index";
 import { APIGatewayProxyEventV2WithAuth } from "../src/types";
@@ -72,6 +72,13 @@ beforeAll(async () => {
       BillingMode: "PAY_PER_REQUEST",
     })
   );
+
+  console.log("run command", await client.send(
+      new GetCommand({
+        TableName: "SettingsTestTable",
+        Key: { id: "test@example.com" },
+      })
+    ));
 
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
