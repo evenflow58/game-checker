@@ -61,7 +61,7 @@ beforeAll(async () => {
   server.listen();
 
   // Create table
-  const result = await client.send(
+  await client.send(
     new CreateTableCommand({
       TableName: TABLE_NAME,
       KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
@@ -69,8 +69,6 @@ beforeAll(async () => {
       BillingMode: "PAY_PER_REQUEST",
     })
   );
-
-  console.log("Create table result", result);
 
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
