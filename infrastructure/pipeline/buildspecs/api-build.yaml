@@ -28,7 +28,7 @@ phases:
       - echo "packaging authorizer packages"
       - npm run package:api 
 
-    post_build:
+  post_build:
     commands:
       - echo "Running tests..."
       # Run tests but don't fail the build
