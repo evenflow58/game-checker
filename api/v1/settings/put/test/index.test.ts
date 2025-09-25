@@ -55,7 +55,14 @@ const client = new DynamoDBClient({
   },
 });
 
-console.log("DynamoDB Client Config", client.config);
+console.log("DynamoDB Client Config", {
+  region: "us-east-1",
+  endpoint: DYNAMODB_ENDPOINT,
+  credentials: {
+    accessKeyId: "fakeMyKeyId",
+    secretAccessKey: "fakeSecretAccessKey",
+  },
+});
 
 beforeAll(async () => {
   // Start MSW Server
@@ -76,11 +83,11 @@ beforeAll(async () => {
   );
 
   console.log("run command", await client.send(
-      new GetCommand({
-        TableName: "SettingsTestTable",
-        Key: { id: "test@example.com" },
-      })
-    ));
+    new GetCommand({
+      TableName: "SettingsTestTable",
+      Key: { id: "test@example.com" },
+    })
+  ));
 
   // Set env vars for Lambda
   process.env["TABLE_NAME"] = TABLE_NAME;
