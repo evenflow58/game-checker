@@ -18,6 +18,10 @@ describe("handler", () => {
     jest.clearAllMocks();
   });
 
+  it("should fail", () => {
+    expect(true).toBe(false);
+  });
+
   it("returns settings when email is present", async () => {
     mockedGetSettings.mockResolvedValue({ theme: "dark" });
 
