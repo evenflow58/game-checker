@@ -25,7 +25,7 @@ env:
 jobs:
   ephemeral-env:
     # Skip this job for PRs targeting main
-    if: ${{ !env.IS_MAIN_PR }}
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.base.ref != 'main' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -89,7 +89,9 @@ jobs:
           echo "Started pipeline execution: $EXECUTION_ID"
 
   main-pipeline:
-    if: ${{ env.IS_MAIN_PR && github.event.pull_request.merged == true }}
+    if: ${{ github.event_name == 'pull_request' && 
+            github.event.pull_request.base.ref == 'main' && 
+            github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
