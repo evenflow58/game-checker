@@ -20,7 +20,6 @@ on:
 
 env:
   BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
-  IS_MAIN_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' }}
   
 jobs:
   ephemeral-env:
@@ -96,6 +95,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Set repo name
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
