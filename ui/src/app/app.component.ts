@@ -2,9 +2,8 @@ import { Component, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GoogleAuthService } from './core/service/google-auth/google-auth.service.js';
 import { GoogleButtonDirective } from './core/directive/google-button.directive.js';
-import { TestApiService } from './core/service/api/test/test.service.js';
 import { environment } from '../environments/environment.js';
-import { filter, takeUntil, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { RouterOutlet } from '@angular/router';
 
 @Component({

@@ -8,7 +8,7 @@ import { APIGatewayProxyEventV2WithAuth } from "./types.js";
 import { checkSteamProvider } from "./providers/steam.js";
 import { SteamError } from "./errors/steamError.js";
 
-function getDyanmoClient(): DynamoDBDocumentClient {
+function getDynamoClient(): DynamoDBDocumentClient {
     const clientConfig: any = {
         region: process.env["AWS_REGION"] || "us-east-1",
     };
@@ -66,7 +66,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
             await checkSteamProvider(steamApiKey, steamId);
 
             await upsertSettings(
-                getDyanmoClient(), 
+                getDynamoClient(), 
                 TABLE_NAME,
                 email,
                 steamId
