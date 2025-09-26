@@ -7,6 +7,7 @@ on:
       - "master"
   pull_request:
     types: [closed]
+  delete:  # 👈 Add this trigger for branch deletion
   workflow_dispatch:  # 👈 allows manual trigger
     inputs:
       branch:
@@ -18,8 +19,8 @@ on:
         default: "false"
 
 env:
-  STACK_NAME: ephemeral-${{ github.event.inputs.branch || github.ref_name }}
-  BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name }}
+  STACK_NAME: ephemeral-${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
+  BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
   
 jobs:
   ephemeral-env:
@@ -85,7 +86,10 @@ jobs:
           echo "Started pipeline execution: $EXECUTION_ID"
 
   teardown:
-    if: github.event.inputs.teardown_only == 'true' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+    if: |
+      github.event.inputs.teardown_only == 'true' || 
+      (github.event_name == 'pull_request' && github.event.action == 'closed') ||
+      github.event_name == 'delete'
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials

@@ -5,26 +5,45 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { getSettings } from "./service";
 import { APIGatewayProxyEventV2WithAuth } from "./types";
 
-const client = new DynamoDBClient({});
-const ddbDocClient = DynamoDBDocumentClient.from(client);
+function getDynamoClient(): DynamoDBDocumentClient {
+    const clientConfig: any = {
+        region: process.env["AWS_REGION"] || "us-east-1",
+    };
 
-const TABLE_NAME = process.env["TABLE_NAME"]!;
+    if (process.env["DYNAMODB_ENDPOINT"]) {
+        clientConfig.endpoint = process.env["DYNAMODB_ENDPOINT"];
+    }
+
+    if (process.env["AWS_ACCESS_KEY_ID"] && process.env["AWS_SECRET_ACCESS_KEY"]) {
+        clientConfig.credentials = {
+            accessKeyId: process.env["AWS_ACCESS_KEY_ID"],
+            secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"],
+        };
+    }
+
+    const client = new DynamoDBClient(clientConfig);
+    return DynamoDBDocumentClient.from(client);
+}
 
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2WithAuth) => {
     console.log("Event used", event)
     try {
+        const TABLE_NAME = process.env["TABLE_NAME"]!;
         const email = event.requestContext.authorizer?.jwt?.claims?.email;
+
+        if (!TABLE_NAME) {
+            throw new Error("TABLE_NAME is not set");
+        }
 
         if (!email) {
             throw new Error("No email found on the token");
         }
 
         const settings = await getSettings(
-            ddbDocClient, TABLE_NAME,
+            getDynamoClient(),
+            TABLE_NAME,
             email,
         );
-
-        console.log("Settings", settings);
 
         return {
             statusCode: 200,

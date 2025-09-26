@@ -1,11 +1,9 @@
-import { Component, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GoogleAuthService } from './core/service/google-auth/google-auth.service.js';
 import { GoogleButtonDirective } from './core/directive/google-button.directive.js';
-import { TestApiService } from './core/service/api/test/test.service.js';
 import { environment } from '../environments/environment.js';
-import { filter, switchMap, of, takeUntil, Subject } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject } from 'rxjs';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -15,32 +13,18 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [CommonModule, GoogleButtonDirective, RouterOutlet],
 })
-export class AppComponent implements AfterViewInit, OnDestroy {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   title = 'game-checker-ui';
   user$ = this.googleAuth.user$;
   destroy$ = new Subject<void>();
+  cachedPicture: string | null = null; // will hold base64 image
 
   constructor(
     private googleAuth: GoogleAuthService,
-    private testApi: TestApiService
-  ) {}
-
-  ngOnDestroy(): void {
-  }
+  ) { }
 
   ngOnInit() {
     this.googleAuth.initClient(environment.GOOGLE_CLIENT_ID);
-
-    // run API call whenever user$ emits a non-null value
-    this.user$
-      .pipe(
-        filter(user => !!user), // only when user is logged in
-        // switchMap(() => this.testApi.getTest() || of(null)),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(result => {
-        console.log('API result after login:', result);
-      });
   }
 
   ngAfterViewInit() {
@@ -50,5 +34,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   signOut() {
     this.googleAuth.signOut();
+    this.cachedPicture = null; // clear picture on sign out
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

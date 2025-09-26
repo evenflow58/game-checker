@@ -1,10 +1,9 @@
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 export async function getSettings(
   dbClient: DynamoDBDocumentClient,
   tableName: string,
   id: string,
-  steamId?: string
 ) {
   // Step 1: Get current item
   const getResult = await dbClient.send(
@@ -13,8 +12,6 @@ export async function getSettings(
       Key: { id },
     })
   );
-
-  console.log("getResult", getResult);
   
   return getResult.Item?.['settings'];
 }

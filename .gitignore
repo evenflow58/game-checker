@@ -51,3 +51,6 @@ samconfig.toml
 # Dist folders
 dist
 .aws-sam
+
+# Test files
+coverage/

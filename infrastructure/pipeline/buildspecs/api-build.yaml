@@ -3,30 +3,73 @@ version: 0.2
 env:
   shell: bash
 
+  secrets-manager:
+    GITHUB_SECRET: Github
+  variables:
+    OWNER: evenflow58
+    REPO: game-checker
+    STATUS_CONTEXT: "API Tests"
+
 phases:
   install:
     runtime-versions:
       nodejs: 22
     commands:
-      - echo "installing base packages"
+      - echo "Installing base packages"
       - npm i
 
       - echo "Installing API packages"
       - npm run install:api
+
   build:
     commands:
-      - echo "building packages"
+      - echo "Building packages"
       - npm run build:api
 
-      - echo "packaging authorizer packages"
+      - echo "Packaging authorizer packages"
       - npm run package:api 
 
-  # post_build:
-  #   commands:
-  #     - echo Testing API
-  #     - npm run test:api
+  post_build:
+    commands:
+      - echo "Running tests..."
 
-  #     - echo Testing Finished
+      - echo "Starting DynamoDB Local in Docker (host network)..."
+      # Use --network host so localhost:8000 is accessible inside the build container
+      - docker run -d --network host amazon/dynamodb-local
+
+      # Wait a bit for the container to start
+      - sleep 5
+
+      # Run tests but don't fail the build
+      - |
+        set +e
+        # Point tests at the local DynamoDB
+        DYNAMO_ENDPOINT=http://localhost:8000 npm run test:api
+        TEST_EXIT=$?
+        set -e
+
+        # Extract the token value from JSON secret
+        GITHUB_TOKEN=$(echo $GITHUB_SECRET | jq -r '.token')
+
+        # Grab commit ID that CodeBuild checked out
+        COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+        echo "Posting test results to GitHub status API..."
+        # Build JSON payload
+        if [ $TEST_EXIT -ne 0 ]; then
+          STATE="failure"
+          DESCRIPTION="Tests failed"
+        else
+          STATE="success"
+          DESCRIPTION="All tests passed"
+        fi
+
+        curl -s \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -X POST \
+          -d "{\"state\": \"$STATE\", \"context\": \"$STATUS_CONTEXT\", \"description\": \"$DESCRIPTION\"}" \
+          https://api.github.com/repos/$OWNER/$REPO/statuses/$COMMIT_ID
 
 artifacts:
   files:

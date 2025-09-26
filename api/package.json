@@ -16,6 +16,7 @@
     "package": "npm-run-all package:*",
     "package:health": "cd health && npm run package",
     "package:v1": "cd v1 && npm run package",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm-run-all test:*",
+    "test:v1": "cd v1 && npm run test"
   }
 }

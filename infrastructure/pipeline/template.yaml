@@ -30,7 +30,7 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: BUILD_GENERAL1_MEDIUM
-        Image: aws/codebuild/standard:6.0
+        Image: aws/codebuild/standard:7.0
         Type: LINUX_CONTAINER
         EnvironmentVariables:
           - Name: BUILD_OUTPUT_BUCKET
@@ -50,8 +50,9 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: BUILD_GENERAL1_MEDIUM
-        Image: aws/codebuild/standard:6.0
+        Image: aws/codebuild/standard:7.0
         Type: LINUX_CONTAINER
+        PrivilegedMode: true
         EnvironmentVariables:
           - Name: BUILD_OUTPUT_BUCKET
             Value: !ImportValue ArtifactBucketId
