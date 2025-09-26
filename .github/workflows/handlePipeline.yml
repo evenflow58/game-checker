@@ -19,7 +19,6 @@ on:
         default: "false"
 
 env:
-  STACK_NAME: ${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
   BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
   
 jobs:
