@@ -6,9 +6,9 @@ on:
       - "main"
       - "master"
   pull_request:
-    types: [closed]
-  delete:  # 👈 Add this trigger for branch deletion
-  workflow_dispatch:  # 👈 allows manual trigger
+    types: [closed, opened]  # Add opened to track new PRs
+  delete:
+  workflow_dispatch:
     inputs:
       branch:
         description: "Branch to deploy"
@@ -20,9 +20,12 @@ on:
 
 env:
   BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
+  IS_MAIN_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' }}
   
 jobs:
   ephemeral-env:
+    # Skip this job for PRs targeting main
+    if: ${{ !env.IS_MAIN_PR }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -85,10 +88,56 @@ jobs:
 
           echo "Started pipeline execution: $EXECUTION_ID"
 
+  main-pipeline:
+    if: ${{ env.IS_MAIN_PR && github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install SAM
+        uses: aws-actions/setup-sam@v2
+
+      - name: Deploy main pipeline
+        run: |
+          sam build -t ./infrastructure/pipeline/template.yaml
+
+          sam deploy \
+            --region us-east-1 \
+            --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-l9itovocker9 \
+            --s3-prefix game-checker-pipeline \
+            --stack-name game-checker-pipeline \
+            --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+                ParameterKey=GitHubBranch,ParameterValue=main \
+                ParameterKey=GitHubRepo,ParameterValue=$REPO_NAME
+
+      - name: Run pipeline
+        run: |
+          set -e
+          EXECUTION_ID=$(aws codepipeline start-pipeline-execution \
+            --name "game-checker-pipeline" \
+            --query 'pipelineExecutionId' \
+            --output text)
+          
+          echo "Started main pipeline execution: $EXECUTION_ID"
+
   teardown:
+    # Update condition to skip teardown for merged PRs to main
     if: |
-      github.event.inputs.teardown_only == 'true' || 
-      (github.event_name == 'pull_request' && github.event.action == 'closed') ||
+      (github.event.inputs.teardown_only == 'true') || 
+      (github.event_name == 'pull_request' && 
+       github.event.action == 'closed' && 
+       github.event.pull_request.base.ref != 'main') ||
       github.event_name == 'delete'
     runs-on: ubuntu-latest
     steps:
