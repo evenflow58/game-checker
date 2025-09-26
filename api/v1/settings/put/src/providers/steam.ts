@@ -21,7 +21,7 @@ export async function checkSteamProvider(steamApiKey: string, steamId: string) {
         console.log("Retreived player");
     }
     catch (err) {
-        console.log(`Unable to retreive a player with the given steam id: ${steamId}`, err);
-        throw new SteamError("Unable to retreive steam id");
+        console.log(`Unable to retrieve a player with the given steam id: ${steamId}`, err);
+        throw new SteamError("Unable to retrieve steam id");
     }
 }

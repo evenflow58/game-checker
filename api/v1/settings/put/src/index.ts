@@ -92,7 +92,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
         if (err instanceof SteamError) {
             body = {
                 ...body,
-                message: "Unable to retreive player with Steam Id",
+                message: "Unable to retrieve player with Steam Id",
                 provider: "Steam",
             }
         }

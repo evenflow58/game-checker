@@ -151,7 +151,7 @@ describe("Integration: PUT handler with DynamoDB Local", () => {
 
     expect(result.statusCode).toBe(500);
     expect(JSON.parse(result.body)).toEqual({
-      message: "Unable to retreive player with Steam Id",
+      message: "Unable to retrieve player with Steam Id",
       provider: "Steam",
     });
   });
@@ -270,7 +270,7 @@ describe("Integration: PUT handler with DynamoDB Local", () => {
 
     expect(result.statusCode).toBe(500);
     expect(JSON.parse(result.body)).toEqual({
-      message: "Unable to retreive player with Steam Id",
+      message: "Unable to retrieve player with Steam Id",
       provider: "Steam",
     });
   });

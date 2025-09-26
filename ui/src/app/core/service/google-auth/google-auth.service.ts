@@ -49,6 +49,7 @@ export class GoogleAuthService {
 
   signOut() {
     google.accounts.id.disableAutoSelect();
+    this.cookieService.delete(this.STORAGE_KEY);
     this.zone.run(() => this.userSubject.next(null));
   }
 
