@@ -14,27 +14,15 @@ Parameters:
     AllowedPattern: (.*[.])*doiownthatgame.com
   BranchName:
     Type: String
-
-Mappings:
-  AliasMap:
-    staging:
-      Alias: staging.doiownthatgame.com
-    production:
-      Alias: doiownthatgame.com
+  Prefix:
+    Type: String
 
 Resources:
-  ##################### CloudFront
-  # CloudFrontOAI:
-  #   Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-  #   Properties:
-  #     CloudFrontOriginAccessIdentityConfig:
-  #       Comment: !Sub 'CloudFront OAI from ${Domain}'
-
   CloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
       OriginAccessControlConfig:
-        Name: DoIOwnThatGameOAC
+        Name: !Sub '${Prefix}DoIOwnThatGameOAC'
         Description: !Sub 'CloudFront OAC from ${Domain}'
         SigningBehavior: always
         SigningProtocol: sigv4

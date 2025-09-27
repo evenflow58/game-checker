@@ -1,5 +1,15 @@
 version: 0.2
 
+env:
+  shell: bash
+
+  secrets-manager:
+    GITHUB_SECRET: Github
+  variables:
+    OWNER: evenflow58
+    REPO: game-checker
+    STATUS_CONTEXT: "UI Tests"
+
 phases:
   install:
     runtime-versions:
@@ -24,12 +34,39 @@ phases:
 
       - echo "packaging packages"
       - npm run package:ui
-  # post_build:
-  #   commands:
-  #     - echo Testing UI
-  #     - npm run test:ui
+  post_build:
+    commands:
+      - echo Testing UI
+      # Run tests but don't fail the build
+      - |
+        set +e
+        # Point tests at the local DynamoDB
+        DYNAMO_ENDPOINT=http://localhost:8000 npm run test:ui
+        TEST_EXIT=$?
+        set -e
 
-  #     - echo Testing Finished
+        # Extract the token value from JSON secret
+        GITHUB_TOKEN=$(echo $GITHUB_SECRET | jq -r '.token')
+
+        # Grab commit ID that CodeBuild checked out
+        COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+        echo "Posting test results to GitHub status UI..."
+        # Build JSON payload
+        if [ $TEST_EXIT -ne 0 ]; then
+          STATE="failure"
+          DESCRIPTION="Tests failed"
+        else
+          STATE="success"
+          DESCRIPTION="All tests passed"
+        fi
+
+        curl -s \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -X POST \
+          -d "{\"state\": \"$STATE\", \"context\": \"$STATUS_CONTEXT\", \"description\": \"$DESCRIPTION\"}" \
+          https://api.github.com/repos/$OWNER/$REPO/statuses/$COMMIT_ID
 
 artifacts:
   files:

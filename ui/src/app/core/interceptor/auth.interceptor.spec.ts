@@ -1,17 +1,66 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
+import { AuthInterceptor } from './auth.interceptor.js';
+import { GoogleAuthService } from '../service/google-auth/google-auth.service.js';
 
-import { authInterceptor } from './auth.interceptor.js';
-
-describe('authInterceptor', () => {
-  const interceptor: HttpInterceptorFn = (req, next) => 
-    TestBed.runInInjectionContext(() => authInterceptor(req, next));
+describe('AuthInterceptor', () => {
+  let httpMock: HttpTestingController;
+  let httpClient: HttpClient;
+  let mockGoogleAuthService: jasmine.SpyObj<GoogleAuthService>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    mockGoogleAuthService = jasmine.createSpyObj('GoogleAuthService', ['getToken']);
+
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: AuthInterceptor,
+          multi: true
+        },
+        {
+          provide: GoogleAuthService,
+          useValue: mockGoogleAuthService
+        }
+      ]
+    });
+
+    httpClient = TestBed.inject(HttpClient);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  it('should be created', () => {
-    expect(interceptor).toBeTruthy();
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should add auth header when token exists', () => {
+    const testToken = 'test-token';
+    mockGoogleAuthService.getToken.and.returnValue(testToken);
+
+    httpClient.get('/api/test').subscribe();
+
+    const httpRequest = httpMock.expectOne('/api/test');
+    expect(httpRequest.request.headers.has('Authorization')).toBeTrue();
+    expect(httpRequest.request.headers.get('Authorization')).toBe(`Bearer ${testToken}`);
+  });
+
+  it('should not add auth header when token is null', () => {
+    mockGoogleAuthService.getToken.and.returnValue(null);
+
+    httpClient.get('/api/test').subscribe();
+
+    const httpRequest = httpMock.expectOne('/api/test');
+    expect(httpRequest.request.headers.has('Authorization')).toBeFalse();
+  });
+
+  it('should pass through the request when token is null', () => {
+    mockGoogleAuthService.getToken.and.returnValue(null);
+
+    httpClient.get('/api/test').subscribe();
+
+    const httpRequest = httpMock.expectOne('/api/test');
+    expect(httpRequest.request.headers.has('Authorization')).toBeFalse();
   });
 });
