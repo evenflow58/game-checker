@@ -80,6 +80,7 @@ Resources:
     Properties:
       Bucket: !ImportValue UiBucketName
       PolicyDocument:
+        Id: !Sub '${Prefix}ui-bucket-policy'
         Statement:
           - Action:
               - s3:GetObject
@@ -92,4 +93,3 @@ Resources:
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
-              # CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
