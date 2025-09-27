@@ -189,9 +189,10 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND
                 StackName: !Sub ["${Prefix}Stack-Stack-Url", { "Prefix": !Ref Prefix }]
                 ParameterOverrides: !Sub
-                  - '{ "Domain": "${Domain}", "BranchName": "${BranchName}" }'
+                  - '{ "Domain": "${Domain}", "BranchName": "${BranchName}", "Prefix": "${Prefix}" }'
                   - Domain: !If [IsProduction, 'doiownthatgame.com', !Sub '${GitHubBranch}.doiownthatgame.com']
                     BranchName: !Ref GitHubBranch
+                    Prefix: !Ref Prefix
               RunOrder: 1
             - Name: DeployUiCode
               ActionTypeId:
