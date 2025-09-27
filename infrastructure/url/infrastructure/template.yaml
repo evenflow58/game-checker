@@ -78,9 +78,9 @@ Resources:
   UiBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      PolicyName: !Sub '${Prefix}ui-bucket-policy'
       Bucket: !ImportValue UiBucketName
       PolicyDocument:
+        Id: !Sub '${Prefix}ui-bucket-policy'
         Statement:
           - Action:
               - s3:GetObject
