@@ -19,7 +19,7 @@ on:
         default: "false"
 
 env:
-  BRANCH_NAME: ${{ github.event.inputs.branch || github.ref_name || github.event.ref }}
+  BRANCH_NAME: ${{ github.event.inputs.branch || github.head_ref || github.ref_name || github.event.ref }}
   
 jobs:
   ephemeral-env:
@@ -137,12 +137,9 @@ jobs:
           echo "Started main pipeline execution: $EXECUTION_ID"
 
   teardown:
-    # Update condition to skip teardown for merged PRs to main
     if: |
-      (github.event.inputs.teardown_only == 'true') || 
-      (github.event_name == 'pull_request' && 
-       github.event.action == 'closed' && 
-       github.event.pull_request.base.ref != 'main') ||
+      github.event.inputs.teardown_only == 'true' || 
+      (github.event_name == 'pull_request' && github.event.action == 'closed') ||
       github.event_name == 'delete'
     runs-on: ubuntu-latest
     steps:
@@ -155,12 +152,14 @@ jobs:
 
       - name: Compute PREFIX ENV variable from branch
         run: |
-          BRANCH_NAME="${{ github.event.inputs.branch || github.ref_name }}"
+          # Use head_ref for PR events, otherwise fallback to other refs
+          BRANCH_NAME="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
           PREFIX=$(echo "$BRANCH_NAME" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
             awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "PREFIX=$PREFIX" >> $GITHUB_ENV
           echo "STACK_NAME=$PREFIX" >> $GITHUB_ENV
+          echo "EPHEMERAL_STACK=ephemeral-$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Delete ephemeral buckets by name
         run: |

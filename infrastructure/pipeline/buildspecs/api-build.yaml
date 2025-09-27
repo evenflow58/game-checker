@@ -8,7 +8,7 @@ env:
   variables:
     OWNER: evenflow58
     REPO: game-checker
-    STATUS_CONTEXT: "API Tests"
+    STATUS_CONTEXT: "continuous-integration/codebuild/api-tests"
 
 phases:
   install:
@@ -68,7 +68,7 @@ phases:
           -H "Authorization: token $GITHUB_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
           -X POST \
-          -d "{\"state\": \"$STATE\", \"context\": \"$STATUS_CONTEXT\", \"description\": \"$DESCRIPTION\"}" \
+          -d "{\"state\": \"$STATE\", \"context\": \"$STATUS_CONTEXT\", \"description\": \"$DESCRIPTION\", \"target_url\": \"$CODEBUILD_BUILD_URL\"}" \
           https://api.github.com/repos/$OWNER/$REPO/statuses/$COMMIT_ID
 
 artifacts:

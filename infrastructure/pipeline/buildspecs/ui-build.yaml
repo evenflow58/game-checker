@@ -8,7 +8,7 @@ env:
   variables:
     OWNER: evenflow58
     REPO: game-checker
-    STATUS_CONTEXT: "UI Tests"
+    STATUS_CONTEXT: "continuous-integration/codebuild/ui-tests"
 
 phases:
   install:
