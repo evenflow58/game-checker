@@ -41,11 +41,13 @@ export class GoogleAuthService {
     const payload = this.decodeJwt(credential);
 
     // Store credential in cookie with expiration
-    this.cookieService.set(this.STORAGE_KEY, credential, payload.exp);
+    this.cookieService.set(this.STORAGE_KEY, credential, {
+      expires: payload.exp
+    });
 
     // Emit user payload
     this.zone.run(() => this.userSubject.next(payload));
-  }
+}
 
   signOut() {
     google.accounts.id.disableAutoSelect();
