@@ -88,8 +88,7 @@ jobs:
           echo "Started pipeline execution: $EXECUTION_ID"
 
   main-pipeline:
-    if: ${{ github.event_name == 'pull_request' && 
-            github.event.pull_request.base.ref == 'main' && 
+    if: ${{ github.event.pull_request.base.ref == 'main' && 
             github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
@@ -130,7 +129,7 @@ jobs:
         run: |
           set -e
           EXECUTION_ID=$(aws codepipeline start-pipeline-execution \
-            --name "game-checker-pipeline" \
+            --name "main" \
             --query 'pipelineExecutionId' \
             --output text)
           
