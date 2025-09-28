@@ -12,6 +12,7 @@
   "scripts": {
     "deploy:bucket": "sam build -t ./infrastructure/codeRepoBucket/template.yaml && cd ./infrastructure/codeRepoBucket/ && sam deploy && cd ",
     "deploy:uiBucket": "sam build -t ./infrastructure/uiBucket/template.yaml && cd ./infrastructure/uiBucket/ && sam deploy && cd ",
+    "deploy:url": "sam build -t ./infrastructure/url/infrastructure/template.yaml && sam deploy && cd ",
     "deploy:cloudFrontCert": "sam build -t ./infrastructure/cloudFrontCert/template.yaml && cd ./infrastructure/cloudFrontCert/ && sam deploy && cd ",
     "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
     "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
