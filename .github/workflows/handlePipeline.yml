@@ -140,6 +140,11 @@ jobs:
       (github.event_name == 'pull_request' && github.event.action == 'closed') ||
       github.event_name == 'delete'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cleanup: ['ephemeral-buckets', 'ui-folder', 'stacks']
+      max-parallel: 3
+      fail-fast: false
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -150,7 +155,6 @@ jobs:
 
       - name: Compute PREFIX ENV variable from branch
         run: |
-          # Use head_ref for PR events, otherwise fallback to other refs
           BRANCH_NAME="${{ github.event.inputs.branch || github.head_ref || github.ref_name }}"
           PREFIX=$(echo "$BRANCH_NAME" | sed -E 's/[^a-zA-Z0-9]+/ /g' | \
             awk '{for(i=1;i<=NF;i++) printf("%s", substr($i,1,1));}')
@@ -159,20 +163,28 @@ jobs:
           echo "STACK_NAME=$PREFIX" >> $GITHUB_ENV
           echo "EPHEMERAL_STACK=ephemeral-$BRANCH_NAME" >> $GITHUB_ENV
 
-      - name: Delete ephemeral buckets by name
+      - name: Delete ephemeral buckets
+        if: matrix.cleanup == 'ephemeral-buckets'
         run: |
           set -euo pipefail
           echo "🔎 Searching for buckets named ephemeral-${BRANCH_NAME}*"
-
           BUCKETS=$(aws s3api list-buckets --query "Buckets[].Name" --output text | tr '\t' '\n' | grep "^ephemeral-${BRANCH_NAME}" || true)
-
           for BUCKET in $BUCKETS; do
             echo "🪣 Emptying and deleting bucket: $BUCKET"
             aws s3 rm "s3://$BUCKET" --recursive || true
             aws s3api delete-bucket --bucket "$BUCKET" || true
           done
 
+      - name: Delete UI bucket folder
+        if: matrix.cleanup == 'ui-folder'
+        run: |
+          set -euo pipefail
+          echo "🔎 Deleting folder ${BRANCH_NAME} from game-checker-ui bucket"
+          aws s3 rm "s3://game-checker-ui/${BRANCH_NAME}" --recursive || true
+          echo "✅ Deleted folder: ${BRANCH_NAME}"
+
       - name: Delete ephemeral stacks
+        if: matrix.cleanup == 'stacks'
         run: |
           set -euo pipefail
 

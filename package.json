@@ -10,11 +10,12 @@
     "pretty-quick": "^2.0.1"
   },
   "scripts": {
-    "deploy:bucket": "sam build -t ./infrastructure/codeRepoBucket/template.yaml && cd ./infrastructure/codeRepoBucket/ && sam deploy && cd ",
-    "deploy:uiBucket": "sam build -t ./infrastructure/uiBucket/template.yaml && cd ./infrastructure/uiBucket/ && sam deploy && cd ",
-    "deploy:cloudFrontCert": "sam build -t ./infrastructure/cloudFrontCert/template.yaml && cd ./infrastructure/cloudFrontCert/ && sam deploy && cd ",
-    "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy && cd ",
-    "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy && cd ",
+    "deploy:bucket": "sam build -t ./infrastructure/codeRepoBucket/template.yaml && cd ./infrastructure/codeRepoBucket/ && sam deploy",
+    "deploy:uiBucket": "sam build -t ./infrastructure/uiBucket/template.yaml && cd ./infrastructure/uiBucket/ && sam deploy",
+    "deploy:url": "sam build -t ./infrastructure/url/infrastructure/template.yaml && sam deploy",
+    "deploy:cloudFrontCert": "sam build -t ./infrastructure/cloudFrontCert/template.yaml && cd ./infrastructure/cloudFrontCert/ && sam deploy",
+    "deploy:pipeline": "sam build -t ./infrastructure/pipeline/template.yaml && cd ./infrastructure/pipeline/ && sam deploy",
+    "deploy:roles": "sam build -t ./infrastructure/roles/template.yaml && cd ./infrastructure/roles/ && sam deploy",
 
     "install:api": "npm-run-all --parallel install:api:* && cd ../",
     "install:api:api": "cd api && npm i",
