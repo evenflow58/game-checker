@@ -203,7 +203,7 @@ Resources:
               Configuration:
                 BucketName: !ImportValue UiBucketName
                 Extract: true
-                ObjectKey: !If [IsProduction, 'master', !Ref GitHubBranch]
+                ObjectKey: !If [IsProduction, 'main', !Ref GitHubBranch]
               InputArtifacts:
                 - Name: uiBuildOutput
               Region: us-east-1
