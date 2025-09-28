@@ -17,6 +17,11 @@ Parameters:
   Prefix:
     Type: String
 
+Conditions:
+  IsMainBranch: !Equals 
+    - !Ref BranchName
+    - main
+
 Resources:
   CloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
@@ -33,7 +38,10 @@ Resources:
     Properties:
       DistributionConfig:
         Aliases:
-          - !Sub '${BranchName}.${DomainName}'
+          - !If 
+            - IsMainBranch
+            - !Ref DomainName
+            - !Sub '${BranchName}.${DomainName}'
         Origins:
           - DomainName: !ImportValue UiBucketDomainName
             Id: ui-bucket
@@ -74,20 +82,25 @@ Resources:
           DNSName: !GetAtt CloudFrontDistribution.DomainName
           EvaluateTargetHealth: false
 
-  ##################### Bucket
+  ##################### Bucket Policy
   UiBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !ImportValue UiBucketName
       PolicyDocument:
+        Version: '2012-10-17'
         Id: !Sub '${Prefix}ui-bucket-policy'
         Statement:
-          - Action:
+          - Sid: !Sub '${Prefix}AllowCloudFrontAccess'
+            Action:
               - s3:GetObject
+              - s3:ListBucket
             Effect: Allow
-            Resource: !Sub
-              - "${BucketArn}/*"
-              - BucketArn: !ImportValue UiBucketArn
+            Resource:
+              - !ImportValue UiBucketArn
+              - !Sub
+                - "${BucketArn}/*"
+                - BucketArn: !ImportValue UiBucketArn
             Principal:
               Service: cloudfront.amazonaws.com
             Condition:
