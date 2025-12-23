@@ -4,6 +4,7 @@
   "description": "Database setup scripts for Game Checker",
   "type": "module",
   "scripts": {
+    "build": "tsc",
     "create-table": "tsx create-table.ts",
     "create-table:localstack": "DYNAMODB_ENDPOINT=http://localhost:4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test tsx create-table.ts"
   },
