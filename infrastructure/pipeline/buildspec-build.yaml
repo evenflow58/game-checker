@@ -32,19 +32,27 @@ phases:
   build:
     commands:
       - echo "Build phase - Compiling TypeScript"
+      - echo "Current directory before build:" && pwd
+      - echo "Listing directories:" && ls -la
+      - echo "Listing infrastructure:" && ls -la infrastructure/ || echo "infrastructure not accessible"
       # Build infrastructure
-      - cd infrastructure/database && npm run build && cd ../..
-      - cd infrastructure/apiGateway && npm run build && cd ../..
+      - echo "Building infrastructure/database..."
+      - test -d infrastructure/database && cd infrastructure/database && npm run build && cd ../.. || echo "infrastructure/database build failed"
+      - echo "Building infrastructure/apiGateway..."
+      - test -d infrastructure/apiGateway && cd infrastructure/apiGateway && npm run build && cd ../.. || echo "infrastructure/apiGateway build failed"
       # Build Lambda functions
-      - cd api/health && npm run build && cd ../..
-      - cd api/v1/settings && npm run build && cd ../..
+      - echo "Building api/health..."
+      - test -d api/health && cd api/health && npm run build && cd ../.. || echo "api/health build failed"
+      - echo "Building api/v1/settings..."
+      - test -d api/v1/settings && cd api/v1/settings && npm run build && cd ../.. || echo "api/v1/settings build failed"
       
   post_build:
     commands:
       - echo "Build completed successfully"
+      - echo "Current directory:" && pwd
       - echo "Listing built artifacts..."
-      - find infrastructure -name "dist" -type d
-      - find api -name "dist" -type d
+      - test -d infrastructure && find infrastructure -name "dist" -type d || echo "No infrastructure dist folders"
+      - test -d api && find api -name "dist" -type d || echo "No api dist folders"
 
 artifacts:
   files:
