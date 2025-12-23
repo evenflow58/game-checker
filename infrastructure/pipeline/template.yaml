@@ -122,7 +122,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'iam:PassRole'
-                Resource: '*'
+                Resource: !GetAtt LambdaExecutionRole.Arn
               - Effect: Allow
                 Action:
                   - 'secretsmanager:GetSecretValue'

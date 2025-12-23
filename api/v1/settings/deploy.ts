@@ -120,7 +120,7 @@ async function deployLambda(): Promise<string> {
   const createCommand = new CreateFunctionCommand({
     FunctionName: FUNCTION_NAME,
     Runtime: "nodejs22.x",
-    Role: "arn:aws:iam::000000000000:role/lambda-role",
+    Role: LAMBDA_ROLE_ARN,
     Handler: "handler.handler",
     Code: {
       ZipFile: zipBuffer,
