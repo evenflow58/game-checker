@@ -28,6 +28,10 @@ phases:
   build:
     commands:
       - echo "Deploying infrastructure..."
+      - echo "Current directory:" && pwd
+      - echo "Listing root:" && ls -la
+      - echo "Listing infrastructure:" && ls -la infrastructure/
+      - echo "Listing infrastructure/database:" && ls -la infrastructure/database/
       - echo "Deploying DynamoDB table..."
       - cd infrastructure/database
       - |
