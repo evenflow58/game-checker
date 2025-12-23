@@ -26,27 +26,34 @@ const pipelineAsync = promisify(pipeline);
 
 const FUNCTION_NAME = process.env.FUNCTION_NAME || "HealthCheck";
 const API_NAME = process.env.API_NAME || "GameCheckerAPI";
-const ENDPOINT = process.env.API_GATEWAY_ENDPOINT || "http://localhost:4566";
+const ENDPOINT = process.env.API_GATEWAY_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
 const ROUTE_KEY = process.env.ROUTE_KEY || "GET /health";
 
-const lambdaClient = new LambdaClient({
+const lambdaConfig: any = {
   region: REGION,
-  endpoint: ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-  },
-});
+};
 
-const apiClient = new ApiGatewayV2Client({
+const apiConfig: any = {
   region: REGION,
-  endpoint: ENDPOINT,
-  credentials: {
+};
+
+// Only set endpoint and credentials for LocalStack
+if (ENDPOINT) {
+  lambdaConfig.endpoint = ENDPOINT;
+  lambdaConfig.credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-  },
-});
+  };
+  apiConfig.endpoint = ENDPOINT;
+  apiConfig.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
+  };
+}
+
+const lambdaClient = new LambdaClient(lambdaConfig);
+const apiClient = new ApiGatewayV2Client(apiConfig);
 
 async function createZipFile(): Promise<Buffer> {
   const zipPath = join(__dirname, "function.zip");

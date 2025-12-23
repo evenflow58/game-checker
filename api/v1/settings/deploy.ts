@@ -28,26 +28,36 @@ const pipelineAsync = promisify(pipeline);
 
 const FUNCTION_NAME = process.env.FUNCTION_NAME || "SettingsGet";
 const API_NAME = process.env.API_NAME || "GameCheckerAPI";
-const ENDPOINT = process.env.API_GATEWAY_ENDPOINT || "http://localhost:4566";
+const ENDPOINT = process.env.API_GATEWAY_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
 const ROUTE_KEY = process.env.ROUTE_KEY || "GET /v1/settings";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "your-google-client-id.apps.googleusercontent.com";
 const ENABLE_AUTH = process.env.ENABLE_AUTH === "true"; // Set to "true" to enable Google OAuth
 
-const lambdaClient = new LambdaClient({
+const lambdaConfig: any = {
   region: REGION,
-  endpoint: ENDPOINT,
-  credentials: {
+};
+
+const apiConfig: any = {
+  region: REGION,
+};
+
+// Only set endpoint and credentials for LocalStack
+if (ENDPOINT) {
+  lambdaConfig.endpoint = ENDPOINT;
+  lambdaConfig.credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-  },
-});
-
-const apiClient = new ApiGatewayV2Client({
-  region: REGION,
-  endpoint: ENDPOINT,
-  credentials: {
+  };
+  apiConfig.endpoint = ENDPOINT;
+  apiConfig.credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
+  };
+}
+
+const lambdaClient = new LambdaClient(lambdaConfig);
+const apiClient = new ApiGatewayV2Client(apiConfig);
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
   },
 });
