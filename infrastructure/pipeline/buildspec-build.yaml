@@ -27,7 +27,8 @@ phases:
       - echo "Installing api/health dependencies..."
       - test -d api/health && cd api/health && npm ci --ignore-scripts && cd ../.. || echo "api/health not found"
       - echo "Installing api/v1/settings dependencies..."
-      - test -d api/v1/settings && cd api/v1/settings && npm ci --ignore-scripts && cd ../.. || echo "api/v1/settings not found"
+      - test -d api/v1/settings && cd api/v1/settings && npm ci --ignore-scripts && cd ../../.. || echo "api/v1/settings not found"
+      - pwd
       
   build:
     commands:
@@ -44,7 +45,7 @@ phases:
       - echo "Building api/health..."
       - test -d api/health && cd api/health && npm run build && cd ../.. || echo "api/health build failed"
       - echo "Building api/v1/settings..."
-      - test -d api/v1/settings && cd api/v1/settings && npm run build && cd ../.. || echo "api/v1/settings build failed"
+      - test -d api/v1/settings && cd api/v1/settings && npm run build && cd ../../.. || echo "api/v1/settings build failed"
       
   post_build:
     commands:
