@@ -276,7 +276,7 @@ Resources:
               Configuration:
                 ProjectName: !Ref DeployProject
               InputArtifacts:
-                - Name: TestOutput
+                - Name: BuildOutput
               OutputArtifacts:
                 - Name: DeployOutput
 
