@@ -10,24 +10,21 @@ phases:
   pre_build:
     commands:
       - echo "Preparing for deployment to AWS"
-      - echo "AWS Region:$AWS_REGION"
-      - echo "Environment:$ENVIRONMENT"
+      - echo "AWS Region - $AWS_REGION"
+      - echo "Environment - $ENVIRONMENT"
       - aws --version
       - echo "Retrieving Google OAuth credentials if auth enabled..."
       - |
         if [ "$ENABLE_AUTH" = "true" ] && [ -n "$GOOGLE_CREDENTIALS_SECRET_ARN" ]; then
           echo "Retrieving Google OAuth credentials from Secrets Manager..."
-          export GOOGLE_CLIENT_ID=$(aws secretsmanager get-secret-value \
-            --secret-id $GOOGLE_CREDENTIALS_SECRET_ARN \
-            --region $AWS_REGION \
-            --query 'SecretString' \
-            --output text | jq -r '.client_id')
+          GOOGLE_CLIENT_ID=$(aws secretsmanager get-secret-value --secret-id $GOOGLE_CREDENTIALS_SECRET_ARN --region $AWS_REGION --query 'SecretString' --output text | jq -r '.client_id')
+          export GOOGLE_CLIENT_ID
           echo "Google Client ID retrieved successfully"
         else
           echo "Authentication disabled or no secret ARN provided"
           export GOOGLE_CLIENT_ID=""
         fi
-      
+
   build:
     commands:
       - echo "Deploying infrastructure..."
@@ -47,10 +44,8 @@ phases:
       - cd ../..
       - echo "Getting API ID..."
       - |
-        export API_ID=$(aws apigatewayv2 get-apis \
-          --region $AWS_REGION \
-          --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" \
-          --output text)
+        API_ID=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" --output text)
+        export API_ID
         echo "API ID: $API_ID"
       - echo "Deploying Health Check Lambda..."
       - cd api/health
@@ -76,20 +71,14 @@ phases:
       - echo "Deployment completed successfully!"
       - echo "Fetching deployed endpoints..."
       - |
-        export API_ID=$(aws apigatewayv2 get-apis \
-          --region $AWS_REGION \
-          --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" \
-          --output text)
+        API_ID=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" --output text)
+        export API_ID
         echo "=== Deployment Summary ==="
-        echo "API ID: $API_ID"
-        echo "API Endpoint: https://$API_ID.execute-api.$AWS_REGION.amazonaws.com"
+        echo "API ID - $API_ID"
+        echo "API Endpoint - https://$API_ID.execute-api.$AWS_REGION.amazonaws.com"
         echo ""
         echo "Available Routes:"
-        aws apigatewayv2 get-routes \
-          --api-id $API_ID \
-          --region $AWS_REGION \
-          --query "Items[].RouteKey" \
-          --output table
+        aws apigatewayv2 get-routes --api-id $API_ID --region $AWS_REGION --query "Items[].RouteKey" --output table
 
 artifacts:
   files:
