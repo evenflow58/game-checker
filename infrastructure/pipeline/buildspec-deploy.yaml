@@ -10,11 +10,10 @@ phases:
   pre_build:
     commands:
       - echo "Preparing for deployment to AWS"
-      - echo "AWS Region: $AWS_REGION"
-      - echo "Environment: $ENVIRONMENT"
+      - echo "AWS Region:$AWS_REGION"
+      - echo "Environment:$ENVIRONMENT"
       - aws --version
-      
-      # Extract Google Client ID from Secrets Manager if auth is enabled
+      - echo "Retrieving Google OAuth credentials if auth enabled..."
       - |
         if [ "$ENABLE_AUTH" = "true" ] && [ -n "$GOOGLE_CREDENTIALS_SECRET_ARN" ]; then
           echo "Retrieving Google OAuth credentials from Secrets Manager..."
@@ -32,8 +31,6 @@ phases:
   build:
     commands:
       - echo "Deploying infrastructure..."
-      
-      # Deploy DynamoDB table
       - echo "Deploying DynamoDB table..."
       - cd infrastructure/database
       - |
@@ -41,8 +38,6 @@ phases:
         export AWS_ENDPOINT=""
         node dist/create-table.js
       - cd ../..
-      
-      # Deploy API Gateway
       - echo "Deploying API Gateway..."
       - cd infrastructure/apiGateway
       - |
@@ -50,16 +45,13 @@ phases:
         export AWS_ENDPOINT=""
         node dist/create-api.js
       - cd ../..
-      
-      # Get the API ID for Lambda deployments
+      - echo "Getting API ID..."
       - |
         export API_ID=$(aws apigatewayv2 get-apis \
           --region $AWS_REGION \
           --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" \
           --output text)
         echo "API ID: $API_ID"
-      
-      # Deploy Health Check Lambda
       - echo "Deploying Health Check Lambda..."
       - cd api/health
       - |
@@ -68,8 +60,6 @@ phases:
         export AWS_ENDPOINT=""
         node dist/deploy.js
       - cd ../..
-      
-      # Deploy Settings Lambda
       - echo "Deploying Settings GET Lambda..."
       - cd api/v1/settings
       - |
