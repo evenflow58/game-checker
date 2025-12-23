@@ -36,14 +36,12 @@ phases:
       - cd infrastructure/database
       - |
         export TABLE_NAME="${ENVIRONMENT}-GameCheckerTable"
-        export AWS_ENDPOINT=""
         node dist/create-table.js
       - cd ../..
       - echo "Deploying API Gateway..."
       - cd infrastructure/apiGateway
       - |
         export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
-        export AWS_ENDPOINT=""
         node dist/create-api.js
       - cd ../..
       - echo "Getting API ID..."
@@ -56,7 +54,6 @@ phases:
       - |
         export FUNCTION_NAME="${ENVIRONMENT}-HealthCheck"
         export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
-        export AWS_ENDPOINT=""
         node dist/deploy.js
       - cd ../..
       - echo "Deploying Settings GET Lambda..."
@@ -64,7 +61,6 @@ phases:
       - |
         export FUNCTION_NAME="${ENVIRONMENT}-SettingsGet"
         export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
-        export AWS_ENDPOINT=""
         export ENABLE_AUTH="${ENABLE_AUTH:-true}"
         export GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
         node dist/deploy.js

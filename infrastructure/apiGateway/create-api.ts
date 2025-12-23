@@ -8,18 +8,24 @@ import {
 } from "@aws-sdk/client-apigatewayv2";
 
 const API_NAME = process.env.API_NAME || "GameCheckerAPI";
-const ENDPOINT = process.env.API_GATEWAY_ENDPOINT || "http://localhost:4566";
+const ENDPOINT = process.env.API_GATEWAY_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
 const LAMBDA_FUNCTION_ARN = process.env.LAMBDA_FUNCTION_ARN || "";
 
-const client = new ApiGatewayV2Client({
+const clientConfig: any = {
   region: REGION,
-  endpoint: ENDPOINT,
-  credentials: {
+};
+
+// Only set endpoint and credentials for LocalStack
+if (ENDPOINT) {
+  clientConfig.endpoint = ENDPOINT;
+  clientConfig.credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-  },
-});
+  };
+}
+
+const client = new ApiGatewayV2Client(clientConfig);
 
 async function apiExists(apiName: string): Promise<string | null> {
   try {

@@ -1,17 +1,23 @@
 import { DynamoDBClient, CreateTableCommand, DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 
 const TABLE_NAME = process.env.TABLE_NAME || "GameCheckerTable";
-const ENDPOINT = process.env.DYNAMODB_ENDPOINT || "http://localhost:4566";
+const ENDPOINT = process.env.DYNAMODB_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
 
-const client = new DynamoDBClient({
+const clientConfig: any = {
   region: REGION,
-  endpoint: ENDPOINT,
-  credentials: {
+};
+
+// Only set endpoint and credentials for LocalStack
+if (ENDPOINT) {
+  clientConfig.endpoint = ENDPOINT;
+  clientConfig.credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-  },
-});
+  };
+}
+
+const client = new DynamoDBClient(clientConfig);
 
 async function tableExists(tableName: string): Promise<boolean> {
   try {
