@@ -1,0 +1,24 @@
+{
+  "name": "@game-checker/api-gateway",
+  "version": "1.0.0",
+  "description": "API Gateway V2 setup for Game Checker using AWS SDK",
+  "main": "dist/create-api.js",
+  "scripts": {
+    "build": "tsc",
+    "create": "node dist/create-api.js"
+  },
+  "keywords": [
+    "apigateway",
+    "aws-sdk",
+    "localstack"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-apigatewayv2": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.2"
+  }
+}

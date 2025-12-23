@@ -1,0 +1,92 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Installing AWS CLI and dependencies..."
+      
+  pre_build:
+    commands:
+      - echo "Preparing for deployment to AWS"
+      - echo "AWS Region: $AWS_REGION"
+      - echo "Environment: $ENVIRONMENT"
+      - aws --version
+      
+  build:
+    commands:
+      - echo "Deploying infrastructure..."
+      
+      # Deploy DynamoDB table
+      - echo "Deploying DynamoDB table..."
+      - cd infrastructure/database
+      - |
+        export TABLE_NAME="${ENVIRONMENT}-GameCheckerTable"
+        export AWS_ENDPOINT=""
+        node dist/create-table.js
+      - cd ../..
+      
+      # Deploy API Gateway
+      - echo "Deploying API Gateway..."
+      - cd infrastructure/apiGateway
+      - |
+        export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
+        export AWS_ENDPOINT=""
+        node dist/create-api.js
+      - cd ../..
+      
+      # Get the API ID for Lambda deployments
+      - |
+        export API_ID=$(aws apigatewayv2 get-apis \
+          --region $AWS_REGION \
+          --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" \
+          --output text)
+        echo "API ID: $API_ID"
+      
+      # Deploy Health Check Lambda
+      - echo "Deploying Health Check Lambda..."
+      - cd api/health
+      - |
+        export FUNCTION_NAME="${ENVIRONMENT}-HealthCheck"
+        export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
+        export AWS_ENDPOINT=""
+        node dist/deploy.js
+      - cd ../..
+      
+      # Deploy Settings Lambda
+      - echo "Deploying Settings GET Lambda..."
+      - cd api/v1/settings
+      - |
+        export FUNCTION_NAME="${ENVIRONMENT}-SettingsGet"
+        export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
+        export AWS_ENDPOINT=""
+        export ENABLE_AUTH="${ENABLE_AUTH:-true}"
+        export GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
+        node dist/deploy.js
+      - cd ../..
+      
+  post_build:
+    commands:
+      - echo "Deployment completed successfully!"
+      - echo "Fetching deployed endpoints..."
+      - |
+        export API_ID=$(aws apigatewayv2 get-apis \
+          --region $AWS_REGION \
+          --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" \
+          --output text)
+        echo "=== Deployment Summary ==="
+        echo "API ID: $API_ID"
+        echo "API Endpoint: https://$API_ID.execute-api.$AWS_REGION.amazonaws.com"
+        echo ""
+        echo "Available Routes:"
+        aws apigatewayv2 get-routes \
+          --api-id $API_ID \
+          --region $AWS_REGION \
+          --query "Items[].RouteKey" \
+          --output table
+
+artifacts:
+  files:
+    - '**/*'
+  name: DeployArtifact

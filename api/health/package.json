@@ -1,0 +1,27 @@
+{
+  "name": "@game-checker/health",
+  "version": "1.0.0",
+  "description": "Health check Lambda function for Game Checker",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "npm run build && node dist/deploy.js"
+  },
+  "keywords": [
+    "lambda",
+    "health-check",
+    "aws-sdk"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-apigatewayv2": "^3.700.0",
+    "@aws-sdk/client-lambda": "^3.700.0",
+    "archiver": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.2",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.2"
+  }
+}
