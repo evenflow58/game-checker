@@ -17,10 +17,10 @@ Parameters:
     Description: GitHub branch to trigger pipeline
     Default: main
     
-  GitHubToken:
+  GitHubTokenSecretArn:
     Type: String
-    Description: GitHub personal access token
-    NoEcho: true
+    Description: ARN of the GitHub token stored in AWS Secrets Manager
+    Default: arn:aws:secretsmanager:us-east-1:625961017727:secret:Github-bXV4Bs
     
   Environment:
     Type: String
@@ -31,10 +31,10 @@ Parameters:
       - staging
       - prod
       
-  GoogleClientId:
+  GoogleCredentialsSecretArn:
     Type: String
-    Description: Google OAuth Client ID for authentication
-    Default: ""
+    Description: ARN of Google OAuth credentials stored in AWS Secrets Manager
+    Default: arn:aws:secretsmanager:us-east-1:625961017727:secret:GoogleCredentials-bj6epK
     
   EnableAuth:
     Type: String
@@ -96,6 +96,12 @@ Resources:
                 Action:
                   - 'iam:PassRole'
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource:
+                  - !Ref GitHubTokenSecretArn
+                  - !Ref GoogleCredentialsSecretArn
 
   # CodePipeline Service Role
   CodePipelineServiceRole:
@@ -127,6 +133,10 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                Resource: !Ref GitHubTokenSecretArn
 
   # Build Project
   BuildProject:
@@ -186,8 +196,8 @@ Resources:
             Value: !Ref Environment
           - Name: AWS_REGION
             Value: !Ref AWS::Region
-          - Name: GOOGLE_CLIENT_ID
-            Value: !Ref GoogleClientId
+          - Name: GOOGLE_CREDENTIALS_SECRET_ARN
+            Value: !Ref GoogleCredentialsSecretArn
           - Name: ENABLE_AUTH
             Value: !Ref EnableAuth
       Source:
@@ -217,7 +227,7 @@ Resources:
                 Owner: !Ref GitHubOwner
                 Repo: !Ref GitHubRepo
                 Branch: !Ref GitHubBranch
-                OAuthToken: !Ref GitHubToken
+                OAuthToken: !Sub '{{resolve:secretsmanager:${GitHubTokenSecretArn}:SecretString:token}}'
                 PollForSourceChanges: false
               OutputArtifacts:
                 - Name: SourceOutput
@@ -276,7 +286,7 @@ Resources:
     Properties:
       Authentication: GITHUB_HMAC
       AuthenticationConfiguration:
-        SecretToken: !Ref GitHubToken
+        SecretToken: !Sub '{{resolve:secretsmanager:${GitHubTokenSecretArn}:SecretString:token}}'
       Filters:
         - JsonPath: "$.ref"
           MatchEquals: !Sub 'refs/heads/${GitHubBranch}'

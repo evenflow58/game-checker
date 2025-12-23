@@ -14,6 +14,21 @@ phases:
       - echo "Environment: $ENVIRONMENT"
       - aws --version
       
+      # Extract Google Client ID from Secrets Manager if auth is enabled
+      - |
+        if [ "$ENABLE_AUTH" = "true" ] && [ -n "$GOOGLE_CREDENTIALS_SECRET_ARN" ]; then
+          echo "Retrieving Google OAuth credentials from Secrets Manager..."
+          export GOOGLE_CLIENT_ID=$(aws secretsmanager get-secret-value \
+            --secret-id $GOOGLE_CREDENTIALS_SECRET_ARN \
+            --region $AWS_REGION \
+            --query 'SecretString' \
+            --output text | jq -r '.client_id')
+          echo "Google Client ID retrieved successfully"
+        else
+          echo "Authentication disabled or no secret ARN provided"
+          export GOOGLE_CLIENT_ID=""
+        fi
+      
   build:
     commands:
       - echo "Deploying infrastructure..."

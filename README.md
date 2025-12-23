@@ -25,40 +25,66 @@ GitHub → CodePipeline → [Build → Test → Deploy] → AWS Infrastructure
 
 ## Prerequisites
 
-1. **GitHub Personal Access Token**
+1. **GitHub Personal Access Token in AWS Secrets Manager**
    - Go to GitHub Settings → Developer Settings → Personal Access Tokens
    - Generate token with `repo` and `admin:repo_hook` scopes
-   - Save the token securely
+   - Store in AWS Secrets Manager as a JSON object with format: `{"token": "your-token", "owner": "your-username"}`
+   - Default ARN: `arn:aws:secretsmanager:us-east-1:625961017727:secret:Github-bXV4Bs`
 
-2. **Google OAuth Client ID** (optional, for authentication)
-   - Required if enabling Google OAuth on settings endpoint
-   - Get from Google Cloud Console
+2. **Google OAuth Credentials in AWS Secrets Manager** (optional, for authentication)
+   - Get OAuth Client ID and Secret from Google Cloud Console
+   - Store in AWS Secrets Manager as a JSON object with format: `{"client_id": "your-id", "secret": "your-secret"}`
+   - Default ARN: `arn:aws:secretsmanager:us-east-1:625961017727:secret:GoogleCredentials-bj6epK`
+   - Only required if enabling Google OAuth on settings endpoint
 
 3. **AWS Account** with appropriate permissions
+   - IAM permissions to create CloudFormation stacks, CodePipeline, CodeBuild, S3, etc.
+   - Permissions to read from Secrets Manager
 
 ## Deployment
 
-### Step 1: Deploy the Pipeline
+### Quick Start: Using the Deployment Script
+
+The easiest way to deploy the pipeline is using the provided script:
 
 ```bash
-cd infrastructure/pipeline
+# Deploy with default settings (dev environment, auth disabled)
+./deploy-pipeline.sh
 
+# Deploy to staging with authentication enabled
+./deploy-pipeline.sh --environment staging --enable-auth
+
+# Deploy to production
+./deploy-pipeline.sh --environment prod --enable-auth --region us-east-1
+```
+
+The script will:
+- Validate the CloudFormation template
+- DeMonitor Deployment
+
+If using manual deployment, monitor with:e stack
+- Monitor the deployment progress in real-time
+- Display stack outputs and next steps
+
+### Manual Deployment
+
+If you prefer to deploy manually:
+
+```bash
 aws cloudformation create-stack \
   --stack-name game-checker-pipeline-dev \
-  --template-body file://template.yaml \
+  --template-body file://infrastructure/pipeline/template.yaml \
   --parameters \
-    ParameterKey=GitHubOwner,ParameterValue=YOUR_GITHUB_USERNAME \
+    ParameterKey=GitHubOwner,ParameterValue=evanjohnson \
     ParameterKey=GitHubRepo,ParameterValue=game-checker \
     ParameterKey=GitHubBranch,ParameterValue=main \
-    ParameterKey=GitHubToken,ParameterValue=YOUR_GITHUB_TOKEN \
     ParameterKey=Environment,ParameterValue=dev \
-    ParameterKey=GoogleClientId,ParameterValue=YOUR_GOOGLE_CLIENT_ID \
     ParameterKey=EnableAuth,ParameterValue=false \
   --capabilities CAPABILITY_IAM \
   --region us-east-1
 ```
 
-### Step 2: Monitor Deployment
+**Note:** GitHub token and Google credentials are automatically retrieved from Secrets Manager. No need to pass them as parameters.
 
 ```bash
 # Watch stack creation
@@ -95,25 +121,28 @@ aws codepipeline start-pipeline-execution \
 
 ## Environment-Specific Deployments
 
-### Development
-```bash
---parameters \
-  ParameterKey=Environment,ParameterValue=dev \
-  ParameterKey=EnableAuth,ParameterValue=false
+./deploy-pipeline.sh --environment dev
 ```
 
 ### Staging
 ```bash
---parameters \
-  ParameterKey=Environment,ParameterValue=staging \
-  ParameterKey=EnableAuth,ParameterValue=true \
-  ParameterKey=GoogleClientId,ParameterValue=YOUR_CLIENT_ID
+./deploy-pipeline.sh --environment staging --enable-auth
 ```
 
 ### Production
 ```bash
---parameters \
-  ParameterKey=Environment,ParameterValue=prod \
+./deploy-pipeline.sh --environment prod --enable-auth --region us-east-1
+```
+
+### Custom Configuration
+```bash
+./deploy-pipeline.sh \
+  --environment staging \
+  --github-owner YOUR_USERNAME \
+  --github-repo YOUR_REPO \
+  --github-branch develop \
+  --region us-west-2 \
+  --enable-auth
   ParameterKey=EnableAuth,ParameterValue=true \
   ParameterKey=GoogleClientId,ParameterValue=YOUR_CLIENT_ID
 ```
@@ -133,6 +162,7 @@ Uses `buildspec-build.yaml`:
 ### 3. Test Stage
 Uses `buildspec-test.yaml`:
 - Runs unit tests (if present)
+- Retrieves Google OAuth credentials from Secrets Manager (if auth enabled)
 - Validates code quality
 - Fails pipeline if tests fail
 
@@ -250,19 +280,57 @@ aws s3 rm s3://${BUCKET} --recursive
 
 ### Deploy Stage Fails
 - Verify IAM permissions for CodeBuild role
-- Check AWS service quotas (Lambda, API Gateway)
-- Verify environment variables are set correctly
-
-## Security Best Practices
-
-1. **Secrets Management**
-   - Store GitHub token in AWS Secrets Manager
+- Che✅ GitHub token stored in AWS Secrets Manager
+   - ✅ Google OAuth credentials stored in AWS Secrets Manager
    - Rotate tokens regularly
    - Use IAM roles instead of access keys
+   - Never commit secrets to version control
 
 2. **IAM Permissions**
    - Follow principle of least privilege
+   - Pipeline has access only to required secrets
    - Use separate roles for build and deploy
+   - Enable CloudTrail for audit logs
+
+3. **Network Security**
+   - Use VPC for CodeBuild if accessing private resources
+   - Enable VPC endpoints for AWS services
+   - Use security groups and NACLs
+
+## Secrets Manager Configuration
+
+The pipeline expects secrets in the following format:
+
+### GitHub Token Secret
+```json
+{
+  "token": "ghp_your_github_token_here",
+  "owner": "your-github-username"
+}
+```
+
+### Google OAuth Credentials Secret
+```json
+{
+  "client_id": "your-client-id.apps.googleusercontent.com",
+  "secret": "your-oauth-client-secret"
+}
+```
+
+To update secrets:
+```bash
+# Update GitHub token
+aws secretsmanager update-secret \
+  --secret-id Github-bXV4Bs \
+  --secret-string '{"token":"new-token","owner":"username"}' \
+  --region us-east-1
+
+# Update Google credentials
+aws secretsmanager update-secret \
+  --secret-id GoogleCredentials-bj6epK \
+  --secret-string '{"client_id":"new-id","secret":"new-secret"}' \
+  --region us-east-1
+```and deploy
    - Enable CloudTrail for audit logs
 
 3. **Network Security**
