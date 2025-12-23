@@ -12,6 +12,7 @@ phases:
       - echo "Preparing for deployment to AWS"
       - echo "AWS Region - $AWS_REGION"
       - echo "Environment - $ENVIRONMENT"
+      - echo "Lambda Role ARN - $LAMBDA_ROLE_ARN"
       - aws --version
       - echo "Retrieving Google OAuth credentials if auth enabled..."
       - |
