@@ -29,6 +29,7 @@ const API_NAME = process.env.API_NAME || "GameCheckerAPI";
 const ENDPOINT = process.env.API_GATEWAY_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
 const ROUTE_KEY = process.env.ROUTE_KEY || "GET /health";
+const LAMBDA_ROLE_ARN = process.env.LAMBDA_ROLE_ARN || "arn:aws:iam::000000000000:role/lambda-role";
 
 const lambdaConfig: any = {
   region: REGION,
@@ -112,7 +113,7 @@ async function deployLambda(): Promise<string> {
   const createCommand = new CreateFunctionCommand({
     FunctionName: FUNCTION_NAME,
     Runtime: "nodejs22.x",
-    Role: "arn:aws:iam::000000000000:role/lambda-role",
+    Role: LAMBDA_ROLE_ARN,
     Handler: "handler.handler",
     Code: {
       ZipFile: zipBuffer,

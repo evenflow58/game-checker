@@ -63,6 +63,33 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:UpdateItem'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:Scan'
+                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Environment}-GameCheckerTable'
+
   # CodeBuild Service Role
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
@@ -200,6 +227,8 @@ Resources:
             Value: !Ref GoogleCredentialsSecretArn
           - Name: ENABLE_AUTH
             Value: !Ref EnableAuth
+          - Name: LAMBDA_ROLE_ARN
+            Value: !GetAtt LambdaExecutionRole.Arn
       Source:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspec-deploy.yaml
