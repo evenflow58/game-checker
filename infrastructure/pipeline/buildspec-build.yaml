@@ -8,16 +8,26 @@ phases:
       - echo "Installing dependencies..."
       - npm --version
       - node --version
+      - echo "Current directory:"
+      - pwd
+      - echo "Listing root directory:"
+      - ls -la
       
   pre_build:
     commands:
       - echo "Pre-build phase - Installing dependencies for all packages"
+      - echo "Working directory:" && pwd
+      - echo "Directory contents:" && ls -la
       # Install infrastructure dependencies
-      - cd infrastructure/database && npm ci --ignore-scripts && cd ../..
-      - cd infrastructure/apiGateway && npm ci --ignore-scripts && cd ../..
+      - echo "Installing infrastructure/database dependencies..."
+      - test -d infrastructure/database && cd infrastructure/database && npm ci --ignore-scripts && cd ../.. || echo "infrastructure/database not found"
+      - echo "Installing infrastructure/apiGateway dependencies..."
+      - test -d infrastructure/apiGateway && cd infrastructure/apiGateway && npm ci --ignore-scripts && cd ../.. || echo "infrastructure/apiGateway not found"
       # Install Lambda function dependencies
-      - cd api/health && npm ci --ignore-scripts && cd ../..
-      - cd api/v1/settings && npm ci --ignore-scripts && cd ../..
+      - echo "Installing api/health dependencies..."
+      - test -d api/health && cd api/health && npm ci --ignore-scripts && cd ../.. || echo "api/health not found"
+      - echo "Installing api/v1/settings dependencies..."
+      - test -d api/v1/settings && cd api/v1/settings && npm ci --ignore-scripts && cd ../.. || echo "api/v1/settings not found"
       
   build:
     commands:
