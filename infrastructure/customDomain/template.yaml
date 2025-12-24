@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Custom domain setup for API and UI'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    Description: Environment name
+  
+  DomainName:
+    Type: String
+    Default: doiownthatgame.com
+    Description: Base domain name
+  
+  ApiSubdomain:
+    Type: String
+    Default: api
+    Description: API subdomain prefix
+  
+  HostedZoneId:
+    Type: String
+    Default: Z02241462DXLIC7B4J76X
+    Description: Route 53 Hosted Zone ID
+  
+  ApiGatewayId:
+    Type: String
+    Default: dnhg4lsrs0
+    Description: API Gateway ID
+
+Resources:
+  # Certificate for api.doiownthatgame.com (must be in us-east-1 for CloudFront)
+  ApiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub '${ApiSubdomain}.${DomainName}'
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Sub '${ApiSubdomain}.${DomainName}'
+          HostedZoneId: !Ref HostedZoneId
+
+  # Certificate for doiownthatgame.com (root domain)
+  UiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub 'www.${DomainName}'
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+
+  # API Gateway Custom Domain
+  ApiCustomDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    DependsOn: ApiCertificate
+    Properties:
+      DomainName: !Sub '${ApiSubdomain}.${DomainName}'
+      DomainNameConfigurations:
+        - CertificateArn: !Ref ApiCertificate
+          EndpointType: REGIONAL
+
+  # API Gateway Domain Mapping
+  ApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      DomainName: !Ref ApiCustomDomain
+      ApiId: !Ref ApiGatewayId
+      Stage: $default
+
+  # Route 53 Record for API
+  ApiDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub '${ApiSubdomain}.${DomainName}'
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiCustomDomain.RegionalDomainName
+        HostedZoneId: !GetAtt ApiCustomDomain.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+
+  # S3 Bucket for UI hosting
+  UiBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${Environment}-${DomainName}-ui'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  # S3 Bucket Policy for CloudFront
+  UiBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref UiBucket
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${UiBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${UiCloudFrontDistribution}'
+
+  # CloudFront Origin Access Control
+  UiOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${Environment}-${DomainName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # CloudFront Distribution for UI
+  UiCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: UiCertificate
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        Aliases:
+          - !Ref DomainName
+          - !Sub 'www.${DomainName}'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref UiCertificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt UiBucket.RegionalDomainName
+            OriginAccessControlId: !Ref UiOriginAccessControl
+            S3OriginConfig: {}
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+  # Route 53 Record for UI (root domain)
+  UiDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt UiCloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID (constant)
+        EvaluateTargetHealth: false
+
+  # Route 53 Record for www subdomain
+  WwwDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub 'www.${DomainName}'
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt UiCloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID (constant)
+        EvaluateTargetHealth: false
+
+Outputs:
+  ApiUrl:
+    Description: API Custom Domain URL
+    Value: !Sub 'https://${ApiSubdomain}.${DomainName}'
+    Export:
+      Name: !Sub '${Environment}-ApiUrl'
+  
+  UiUrl:
+    Description: UI Custom Domain URL
+    Value: !Sub 'https://${DomainName}'
+    Export:
+      Name: !Sub '${Environment}-UiUrl'
+  
+  UiBucketName:
+    Description: S3 Bucket for UI hosting
+    Value: !Ref UiBucket
+    Export:
+      Name: !Sub '${Environment}-UiBucketName'
+  
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref UiCloudFrontDistribution
+    Export:
+      Name: !Sub '${Environment}-CloudFrontDistributionId'
+  
+  ApiCertificateArn:
+    Description: API Certificate ARN
+    Value: !Ref ApiCertificate
+  
+  UiCertificateArn:
+    Description: UI Certificate ARN
+    Value: !Ref UiCertificate
