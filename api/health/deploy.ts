@@ -149,23 +149,31 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
   const accountId = identity.Account;
 
   // Add permission for API Gateway to invoke Lambda
+  // Remove existing permission first to ensure we have the correct account ID
   try {
-    const permissionCommand = new AddPermissionCommand({
+    const { RemovePermissionCommand } = require("@aws-sdk/client-lambda");
+    await lambdaClient.send(new RemovePermissionCommand({
       FunctionName: FUNCTION_NAME,
       StatementId: `apigateway-${apiId}`,
-      Action: "lambda:InvokeFunction",
-      Principal: "apigateway.amazonaws.com",
-      SourceArn: `arn:aws:execute-api:${REGION}:${accountId}:${apiId}/*`,
-    });
-    
-    await lambdaClient.send(permissionCommand);
-    console.log(`✅ Permission added for API Gateway to invoke Lambda`);
+    }));
+    console.log(`  Removed existing permission`);
   } catch (error: any) {
-    if (error.name !== "ResourceConflictException") {
-      throw error;
+    if (error.name !== "ResourceNotFoundException") {
+      // Ignore if permission doesn't exist
     }
-    console.log(`  Permission already exists`);
   }
+
+  // Add the permission with correct account ID
+  const permissionCommand = new AddPermissionCommand({
+    FunctionName: FUNCTION_NAME,
+    StatementId: `apigateway-${apiId}`,
+    Action: "lambda:InvokeFunction",
+    Principal: "apigateway.amazonaws.com",
+    SourceArn: `arn:aws:execute-api:${REGION}:${accountId}:${apiId}/*`,
+  });
+  
+  await lambdaClient.send(permissionCommand);
+  console.log(`✅ Permission added for API Gateway to invoke Lambda`);
 
   // Create integration
   console.log(`Creating integration...`);
