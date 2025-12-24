@@ -146,6 +146,12 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
 
   console.log(`Found API: ${apiId}`);
 
+  // Get AWS account ID
+  const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
+  const stsClient = new STSClient({ region: REGION });
+  const identity = await stsClient.send(new GetCallerIdentityCommand({}));
+  const accountId = identity.Account;
+
   // Add permission for API Gateway to invoke Lambda
   try {
     const permissionCommand = new AddPermissionCommand({
@@ -153,7 +159,7 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
       StatementId: `apigateway-${apiId}`,
       Action: "lambda:InvokeFunction",
       Principal: "apigateway.amazonaws.com",
-      SourceArn: `arn:aws:execute-api:${REGION}:000000000000:${apiId}/*`,
+      SourceArn: `arn:aws:execute-api:${REGION}:${accountId}:${apiId}/*`,
     });
     
     await lambdaClient.send(permissionCommand);
