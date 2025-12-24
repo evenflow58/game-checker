@@ -7,10 +7,12 @@ phases:
       
   pre_build:
     commands:
-      - echo "Running UI tests..."
+      - echo "Installing UI dependencies..."
+      - cd ui && npm ci && cd ..
       
   build:
     commands:
+      - echo "Running UI tests..."
       - echo "Testing Angular application..."
       - |
         if [ -f "ui/package.json" ] && grep -q '"test"' ui/package.json; then
