@@ -1,0 +1,39 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Deploying infrastructure (DynamoDB & API Gateway)..."
+      - echo "AWS Region - $AWS_REGION"
+      - echo "Environment - $ENVIRONMENT"
+
+  build:
+    commands:
+      - echo "Deploying DynamoDB table..."
+      - cd infrastructure/database
+      - |
+        export TABLE_NAME="${ENVIRONMENT}-GameCheckerTable"
+        node dist/create-table.js
+      - cd ../..
+      
+      - echo "Deploying API Gateway..."
+      - cd infrastructure/apiGateway
+      - |
+        export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
+        node dist/create-api.js
+      - cd ../..
+      
+      - echo "Getting API ID..."
+      - |
+        API_ID=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" --output text)
+        echo "API ID: $API_ID"
+        echo "$API_ID" > /tmp/api_id.txt
+
+  post_build:
+    commands:
+      - echo "✅ Infrastructure deployment complete!"
+
+artifacts:
+  files:
+    - /tmp/api_id.txt
+  name: InfrastructureOutput

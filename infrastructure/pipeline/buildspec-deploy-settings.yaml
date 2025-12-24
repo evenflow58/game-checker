@@ -1,0 +1,38 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Deploying Settings Lambda..."
+      - echo "Lambda Role ARN - $LAMBDA_ROLE_ARN"
+      - echo "Retrieving Google OAuth credentials if auth enabled..."
+      - |
+        if [ "$ENABLE_AUTH" = "true" ] && [ -n "$GOOGLE_CREDENTIALS_SECRET_ARN" ]; then
+          echo "Retrieving Google OAuth credentials from Secrets Manager..."
+          GOOGLE_CLIENT_ID=$(aws secretsmanager get-secret-value --secret-id $GOOGLE_CREDENTIALS_SECRET_ARN --region $AWS_REGION --query 'SecretString' --output text | jq -r '.client_id')
+          export GOOGLE_CLIENT_ID
+          echo "Google Client ID retrieved successfully"
+        else
+          echo "Authentication disabled or no secret ARN provided"
+          export GOOGLE_CLIENT_ID=""
+        fi
+
+  build:
+    commands:
+      - |
+        API_ID=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" --output text)
+        export API_ID
+        echo "API ID: $API_ID"
+      
+      - cd api/v1/settings
+      - |
+        export FUNCTION_NAME="${ENVIRONMENT}-SettingsGet"
+        export API_NAME="${ENVIRONMENT}-GameCheckerAPI"
+        export ENABLE_AUTH="${ENABLE_AUTH:-true}"
+        export GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
+        node dist/deploy.js
+      - cd ../..
+
+  post_build:
+    commands:
+      - echo "✅ Settings Lambda deployed!"

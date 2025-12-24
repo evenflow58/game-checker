@@ -1,0 +1,41 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Installing Node.js 22..."
+      - npm --version
+      - node --version
+      
+  pre_build:
+    commands:
+      - echo "Installing Lambda function dependencies..."
+      - echo "Installing api/health dependencies..."
+      - cd api/health && npm ci --ignore-scripts && cd ../..
+      - echo "Installing api/v1/settings dependencies..."
+      - cd api/v1/settings && npm ci --ignore-scripts && cd ../../..
+      
+  build:
+    commands:
+      - echo "Building Lambda functions..."
+      - echo "Building api/health..."
+      - cd api/health && npm run build && cd ../..
+      - echo "Building api/v1/settings..."
+      - cd api/v1/settings && npm run build && cd ../../..
+      
+  post_build:
+    commands:
+      - echo "Lambda functions build completed"
+      - find api -name "dist" -type d
+
+artifacts:
+  files:
+    - 'api/**/*'
+  name: LambdasBuildArtifact
+
+cache:
+  paths:
+    - 'api/health/node_modules/**/*'
+    - 'api/v1/settings/node_modules/**/*'

@@ -165,11 +165,11 @@ Resources:
                   - 'secretsmanager:GetSecretValue'
                 Resource: !Ref GitHubTokenSecretArn
 
-  # Build Project
-  BuildProject:
+  # Build Infrastructure Project
+  BuildInfrastructureProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub '${Environment}-GameChecker-Build'
+      Name: !Sub '${Environment}-GameChecker-Build-Infrastructure'
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Artifacts:
         Type: CODEPIPELINE
@@ -182,10 +182,54 @@ Resources:
             Value: !Ref Environment
       Source:
         Type: CODEPIPELINE
-        BuildSpec: infrastructure/pipeline/buildspec-build.yaml
+        BuildSpec: infrastructure/pipeline/buildspec-build-infrastructure.yaml
       Cache:
         Type: S3
-        Location: !Sub '${ArtifactBucket}/cache'
+        Location: !Sub '${ArtifactBucket}/cache/infrastructure'
+
+  # Build Lambdas Project
+  BuildLambdasProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Build-Lambdas'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-build-lambdas.yaml
+      Cache:
+        Type: S3
+        Location: !Sub '${ArtifactBucket}/cache/lambdas'
+
+  # Build UI Project
+  BuildUIProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Build-UI'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-build-ui.yaml
+      Cache:
+        Type: S3
+        Location: !Sub '${ArtifactBucket}/cache/ui'
 
   # Test Project
   TestProject:
@@ -206,11 +250,55 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspec-test.yaml
 
-  # Deploy Project
-  DeployProject:
+  # Deploy Infrastructure Project
+  DeployInfrastructureProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub '${Environment}-GameChecker-Deploy'
+      Name: !Sub '${Environment}-GameChecker-Deploy-Infrastructure'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-infrastructure.yaml
+
+  # Deploy Health Lambda Project
+  DeployHealthProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Deploy-Health'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+          - Name: LAMBDA_ROLE_ARN
+            Value: !GetAtt LambdaExecutionRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-health.yaml
+
+  # Deploy Settings Lambda Project
+  DeploySettingsProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Deploy-Settings'
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Artifacts:
         Type: CODEPIPELINE
@@ -231,7 +319,28 @@ Resources:
             Value: !GetAtt LambdaExecutionRole.Arn
       Source:
         Type: CODEPIPELINE
-        BuildSpec: infrastructure/pipeline/buildspec-deploy.yaml
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-settings.yaml
+
+  # Deploy UI Project
+  DeployUIProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Deploy-UI'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-ui.yaml
 
   # CodePipeline
   Pipeline:
@@ -261,21 +370,48 @@ Resources:
               OutputArtifacts:
                 - Name: SourceOutput
                 
-        # Build Stage
+        # Build Stage (Parallel)
         - Name: Build
           Actions:
-            - Name: BuildAction
+            - Name: BuildInfrastructure
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref BuildProject
+                ProjectName: !Ref BuildInfrastructureProject
               InputArtifacts:
                 - Name: SourceOutput
               OutputArtifacts:
-                - Name: BuildOutput
+                - Name: InfrastructureBuildOutput
+              RunOrder: 1
+            - Name: BuildLambdas
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildLambdasProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: LambdasBuildOutput
+              RunOrder: 1
+            - Name: BuildUI
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildUIProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: UIBuildOutput
+              RunOrder: 1
                 
         # Test Stage
         - Name: Test
@@ -289,25 +425,72 @@ Resources:
               Configuration:
                 ProjectName: !Ref TestProject
               InputArtifacts:
-                - Name: BuildOutput
+                - Name: InfrastructureBuildOutput
+                - Name: LambdasBuildOutput
               OutputArtifacts:
                 - Name: TestOutput
                 
-        # Deploy Stage
-        - Name: Deploy
+        # Deploy Infrastructure Stage
+        - Name: Deploy-Infrastructure
           Actions:
-            - Name: DeployAction
+            - Name: DeployInfrastructure
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployProject
+                ProjectName: !Ref DeployInfrastructureProject
               InputArtifacts:
-                - Name: BuildOutput
+                - Name: InfrastructureBuildOutput
               OutputArtifacts:
-                - Name: DeployOutput
+                - Name: InfrastructureDeployOutput
+                
+        # Deploy Lambdas Stage (Parallel)
+        - Name: Deploy-Lambdas
+          Actions:
+            - Name: DeployHealth
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref DeployHealthProject
+              InputArtifacts:
+                - Name: LambdasBuildOutput
+              OutputArtifacts:
+                - Name: HealthDeployOutput
+              RunOrder: 1
+            - Name: DeploySettings
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref DeploySettingsProject
+              InputArtifacts:
+                - Name: LambdasBuildOutput
+              OutputArtifacts:
+                - Name: SettingsDeployOutput
+              RunOrder: 1
+                
+        # Deploy UI Stage
+        - Name: Deploy-UI
+          Actions:
+            - Name: DeployUI
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref DeployUIProject
+              InputArtifacts:
+                - Name: UIBuildOutput
+              OutputArtifacts:
+                - Name: UIDeployOutput
 
   # GitHub Webhook
   PipelineWebhook:

@@ -1,0 +1,41 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Installing Node.js 22..."
+      - npm --version
+      - node --version
+      
+  pre_build:
+    commands:
+      - echo "Installing infrastructure dependencies..."
+      - echo "Installing infrastructure/database dependencies..."
+      - cd infrastructure/database && npm ci --ignore-scripts && cd ../..
+      - echo "Installing infrastructure/apiGateway dependencies..."
+      - cd infrastructure/apiGateway && npm ci --ignore-scripts && cd ../..
+      
+  build:
+    commands:
+      - echo "Building infrastructure projects..."
+      - echo "Building infrastructure/database..."
+      - cd infrastructure/database && npm run build && cd ../..
+      - echo "Building infrastructure/apiGateway..."
+      - cd infrastructure/apiGateway && npm run build && cd ../..
+      
+  post_build:
+    commands:
+      - echo "Infrastructure build completed"
+      - find infrastructure -name "dist" -type d
+
+artifacts:
+  files:
+    - 'infrastructure/**/*'
+  name: InfrastructureBuildArtifact
+
+cache:
+  paths:
+    - 'infrastructure/database/node_modules/**/*'
+    - 'infrastructure/apiGateway/node_modules/**/*'

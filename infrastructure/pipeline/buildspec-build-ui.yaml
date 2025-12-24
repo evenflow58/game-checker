@@ -1,0 +1,34 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Installing Node.js 22..."
+      - npm --version
+      - node --version
+      
+  pre_build:
+    commands:
+      - echo "Installing UI dependencies..."
+      - cd ui && npm ci && cd ..
+      
+  build:
+    commands:
+      - echo "Building Angular UI..."
+      - cd ui && npm run build -- --configuration production && cd ..
+      
+  post_build:
+    commands:
+      - echo "UI build completed"
+      - ls -la ui/dist/
+
+artifacts:
+  files:
+    - 'ui/**/*'
+  name: UIBuildArtifact
+
+cache:
+  paths:
+    - 'ui/node_modules/**/*'

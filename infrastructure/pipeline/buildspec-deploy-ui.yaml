@@ -1,0 +1,38 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Deploying UI to S3 and CloudFront..."
+
+  build:
+    commands:
+      - |
+        BUCKET_NAME=$(aws cloudformation describe-stacks \
+          --stack-name game-checker-custom-domain-${ENVIRONMENT} \
+          --region $AWS_REGION \
+          --query 'Stacks[0].Outputs[?OutputKey==`UiBucketName`].OutputValue' \
+          --output text 2>/dev/null || echo "")
+        
+        if [ -n "$BUCKET_NAME" ]; then
+          echo "Uploading UI to S3 bucket: $BUCKET_NAME"
+          aws s3 sync ui/dist/ui/browser "s3://$BUCKET_NAME" --delete
+          
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name game-checker-custom-domain-${ENVIRONMENT} \
+            --region $AWS_REGION \
+            --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
+            --output text 2>/dev/null || echo "")
+          
+          if [ -n "$DISTRIBUTION_ID" ]; then
+            echo "Creating CloudFront invalidation..."
+            aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
+            echo "✅ UI deployed to https://doiownthatgame.com"
+          fi
+        else
+          echo "⚠️ Custom domain stack not found, skipping UI deployment"
+        fi
+
+  post_build:
+    commands:
+      - echo "✅ UI deployment complete!"
