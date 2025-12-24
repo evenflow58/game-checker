@@ -146,9 +146,17 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
 
   console.log(`Found API: ${apiId}`);
 
-  // Get AWS account ID
+  // Get AWS account ID (use LocalStack default for local, real account ID for AWS)
   const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
-  const stsClient = new STSClient({ region: REGION });
+  const stsConfig: any = { region: REGION };
+  if (ENDPOINT) {
+    stsConfig.endpoint = ENDPOINT;
+    stsConfig.credentials = {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
+    };
+  }
+  const stsClient = new STSClient(stsConfig);
   const identity = await stsClient.send(new GetCallerIdentityCommand({}));
   const accountId = identity.Account;
 

@@ -1,10 +1,7 @@
 import { Injectable, signal } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 declare const google: any;
-
-const environment = {
-  googleClientId: '526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com'
-};
 
 export interface User {
   sub: string;

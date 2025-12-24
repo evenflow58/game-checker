@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://dnhg4lsrs0.execute-api.us-east-1.amazonaws.com',
-  googleClientId: '181396477895-mif6hcekhvhi32up28g49hve07vlvchm.apps.googleusercontent.com'
+  apiUrl: 'http://45256112.execute-api.localhost.localstack.cloud:4566',
+  googleClientId: '526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com'
 };
