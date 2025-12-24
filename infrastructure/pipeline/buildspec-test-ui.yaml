@@ -16,7 +16,7 @@ phases:
       - echo "Testing Angular application..."
       - |
         if [ -f "ui/package.json" ] && grep -q '"test"' ui/package.json; then
-          cd ui && npm test -- --watch=false --browsers=ChromeHeadless && cd ..
+          cd ui && npm test && cd ..
         else
           echo "No tests found for UI"
         fi
