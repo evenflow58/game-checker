@@ -8,7 +8,9 @@ phases:
       - echo "Environment - $ENVIRONMENT"
       - echo "Copying built artifacts from secondary source..."
       - cp -r $CODEBUILD_SRC_DIR_InfrastructureBuildOutput/infrastructure/database/dist infrastructure/database/ || echo "No database dist"
+      - cp -r $CODEBUILD_SRC_DIR_InfrastructureBuildOutput/infrastructure/database/node_modules infrastructure/database/ || echo "No database node_modules"
       - cp -r $CODEBUILD_SRC_DIR_InfrastructureBuildOutput/infrastructure/apiGateway/dist infrastructure/apiGateway/ || echo "No apiGateway dist"
+      - cp -r $CODEBUILD_SRC_DIR_InfrastructureBuildOutput/infrastructure/apiGateway/node_modules infrastructure/apiGateway/ || echo "No apiGateway node_modules"
 
   build:
     commands:

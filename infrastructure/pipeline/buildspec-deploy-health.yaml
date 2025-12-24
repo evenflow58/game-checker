@@ -7,8 +7,7 @@ phases:
       - echo "Lambda Role ARN - $LAMBDA_ROLE_ARN"
       - echo "Copying built artifacts from secondary source..."
       - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/health/dist api/health/ || echo "No health dist"
-      - echo "Copying built artifacts from secondary source..."
-      - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/health/dist api/health/ || echo "No health dist"
+      - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/health/node_modules api/health/ || echo "No health node_modules"
 
   build:
     commands:
