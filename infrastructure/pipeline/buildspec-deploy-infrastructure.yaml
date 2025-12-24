@@ -27,7 +27,8 @@ phases:
       - |
         API_ID=$(aws apigatewayv2 get-apis --region $AWS_REGION --query "Items[?Name=='${ENVIRONMENT}-GameCheckerAPI'].ApiId" --output text)
         echo "API ID: $API_ID"
-        echo "$API_ID" > /tmp/api_id.txt
+        mkdir -p build-output
+        echo "$API_ID" > build-output/api_id.txt
 
   post_build:
     commands:
@@ -35,5 +36,5 @@ phases:
 
 artifacts:
   files:
-    - /tmp/api_id.txt
-  name: InfrastructureOutput
+    - build-output/api_id.txt
+  name: InfrastructureDeployOutput
