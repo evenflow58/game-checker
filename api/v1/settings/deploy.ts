@@ -250,10 +250,26 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
     console.log(`   For production, set ENABLE_AUTH=true and GOOGLE_CLIENT_ID`);
   }
 
-  // Create route (or skip if it already exists)
-  console.log(`Creating route: ${ROUTE_KEY}...`);
+  // Delete and recreate route to ensure it uses the new authorizer
+  console.log(`Setting up route: ${ROUTE_KEY}...`);
   
   try {
+    // Check if route exists and delete it
+    const getRoutesCommand = new GetRoutesCommand({ ApiId: apiId });
+    const routesResponse = await apiClient.send(getRoutesCommand);
+    const existingRoute = routesResponse.Items?.find(route => route.RouteKey === ROUTE_KEY);
+    
+    if (existingRoute) {
+      console.log(`  Deleting existing route to update configuration...`);
+      const { DeleteRouteCommand } = require("@aws-sdk/client-apigatewayv2");
+      await apiClient.send(new DeleteRouteCommand({
+        ApiId: apiId,
+        RouteId: existingRoute.RouteId
+      }));
+      console.log(`  Deleted old route`);
+    }
+    
+    // Create new route with current authorizer
     const createRouteCommand = new CreateRouteCommand({
       ApiId: apiId,
       RouteKey: ROUTE_KEY,
@@ -268,11 +284,8 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
       console.log(`   🔒 Protected with Google OAuth`);
     }
   } catch (error: any) {
-    if (error.name === "ConflictException") {
-      console.log(`  Route already exists, skipping...`);
-    } else {
-      throw error;
-    }
+    console.error(`Failed to create route: ${error.message}`);
+    throw error;
   }
   
   // Create $default stage for auto-deployment
