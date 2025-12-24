@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 declare const google: any;
 
 const environment = {
-  googleClientId: '181396477895-mif6hcekhvhi32up28g49hve07vlvchm.apps.googleusercontent.com'
+  googleClientId: '526294520699-n3mfhhfmf1ucqhmbgj1kqir4i5f9fb2j.apps.googleusercontent.com'
 };
 
 export interface User {
@@ -53,7 +53,9 @@ export class AuthService {
   private setupGoogle(): void {
     google.accounts.id.initialize({
       client_id: environment.googleClientId,
-      callback: (response: any) => this.handleCredentialResponse(response)
+      callback: (response: any) => this.handleCredentialResponse(response),
+      ux_mode: 'popup',
+      auto_select: false
     });
   }
 
