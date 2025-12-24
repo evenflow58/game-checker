@@ -2,7 +2,6 @@
   "name": "game-checker-database-setup",
   "version": "1.0.0",
   "description": "Database setup scripts for Game Checker",
-  "type": "module",
   "scripts": {
     "build": "tsc",
     "create-table": "tsx create-table.ts",
