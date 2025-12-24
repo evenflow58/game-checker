@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+      
+  pre_build:
+    commands:
+      - echo "Running Lambda function tests..."
+      
+  build:
+    commands:
+      - echo "Testing api/health..."
+      - |
+        if [ -f "api/health/package.json" ] && grep -q '"test"' api/health/package.json; then
+          cd api/health && npm test && cd ../..
+        else
+          echo "No tests found for health endpoint"
+        fi
+      - echo "Testing api/v1/settings..."
+      - |
+        if [ -f "api/v1/settings/package.json" ] && grep -q '"test"' api/v1/settings/package.json; then
+          cd api/v1/settings && npm test && cd ../../..
+        else
+          echo "No tests found for settings endpoint"
+        fi
+      
+  post_build:
+    commands:
+      - echo "Lambda tests completed"
+
+artifacts:
+  files:
+    - 'api/**/*'
+  name: LambdasTestArtifact

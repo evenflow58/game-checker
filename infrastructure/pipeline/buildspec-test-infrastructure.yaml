@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+      
+  pre_build:
+    commands:
+      - echo "Running infrastructure tests..."
+      
+  build:
+    commands:
+      - echo "Testing infrastructure/database..."
+      - |
+        if [ -f "infrastructure/database/package.json" ] && grep -q '"test"' infrastructure/database/package.json; then
+          cd infrastructure/database && npm test && cd ../..
+        else
+          echo "No tests found for database infrastructure"
+        fi
+      - echo "Testing infrastructure/apiGateway..."
+      - |
+        if [ -f "infrastructure/apiGateway/package.json" ] && grep -q '"test"' infrastructure/apiGateway/package.json; then
+          cd infrastructure/apiGateway && npm test && cd ../..
+        else
+          echo "No tests found for apiGateway infrastructure"
+        fi
+      
+  post_build:
+    commands:
+      - echo "Infrastructure tests completed"
+
+artifacts:
+  files:
+    - 'infrastructure/**/*'
+  name: InfrastructureTestArtifact

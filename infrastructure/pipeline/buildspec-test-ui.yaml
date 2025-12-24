@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+      
+  pre_build:
+    commands:
+      - echo "Running UI tests..."
+      
+  build:
+    commands:
+      - echo "Testing Angular application..."
+      - |
+        if [ -f "ui/package.json" ] && grep -q '"test"' ui/package.json; then
+          cd ui && npm test -- --watch=false --browsers=ChromeHeadless && cd ..
+        else
+          echo "No tests found for UI"
+        fi
+      
+  post_build:
+    commands:
+      - echo "UI tests completed"
+
+artifacts:
+  files:
+    - 'ui/**/*'
+  name: UITestArtifact

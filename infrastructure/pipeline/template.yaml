@@ -231,11 +231,11 @@ Resources:
         Type: S3
         Location: !Sub '${ArtifactBucket}/cache/ui'
 
-  # Test Project
-  TestProject:
+  # Test Infrastructure Project
+  TestInfrastructureProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub '${Environment}-GameChecker-Test'
+      Name: !Sub '${Environment}-GameChecker-Test-Infrastructure'
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Artifacts:
         Type: CODEPIPELINE
@@ -248,7 +248,45 @@ Resources:
             Value: !Ref Environment
       Source:
         Type: CODEPIPELINE
-        BuildSpec: infrastructure/pipeline/buildspec-test.yaml
+        BuildSpec: infrastructure/pipeline/buildspec-test-infrastructure.yaml
+
+  # Test Lambdas Project
+  TestLambdasProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Test-Lambdas'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-test-lambdas.yaml
+
+  # Test UI Project
+  TestUIProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Test-UI'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-test-ui.yaml
 
   # Deploy Infrastructure Project
   DeployInfrastructureProject:
@@ -413,22 +451,48 @@ Resources:
                 - Name: UIBuildOutput
               RunOrder: 1
                 
-        # Test Stage
+        # Test Stage (Parallel)
         - Name: Test
           Actions:
-            - Name: TestAction
+            - Name: TestInfrastructure
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref TestProject
+                ProjectName: !Ref TestInfrastructureProject
               InputArtifacts:
                 - Name: InfrastructureBuildOutput
+              OutputArtifacts:
+                - Name: InfrastructureTestOutput
+              RunOrder: 1
+            - Name: TestLambdas
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TestLambdasProject
+              InputArtifacts:
                 - Name: LambdasBuildOutput
               OutputArtifacts:
-                - Name: TestOutput
+                - Name: LambdasTestOutput
+              RunOrder: 1
+            - Name: TestUI
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TestUIProject
+              InputArtifacts:
+                - Name: UIBuildOutput
+              OutputArtifacts:
+                - Name: UITestOutput
+              RunOrder: 1
                 
         # Deploy Infrastructure Stage
         - Name: Deploy-Infrastructure
