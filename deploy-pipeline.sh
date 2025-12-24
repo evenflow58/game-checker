@@ -231,7 +231,7 @@ echo ""
 
 # Get stack outputs
 info "=== Stack Outputs ==="
-aws cloudformation describe-stacks \
+AWS_PAGER="" aws cloudformation describe-stacks \
     --stack-name $STACK_NAME \
     --region $AWS_REGION \
     --query 'Stacks[0].Outputs[].[OutputKey,OutputValue,Description]' \
@@ -240,7 +240,7 @@ aws cloudformation describe-stacks \
 echo ""
 
 # Get pipeline URL
-PIPELINE_URL=$(aws cloudformation describe-stacks \
+PIPELINE_URL=$(AWS_PAGER="" aws cloudformation describe-stacks \
     --stack-name $STACK_NAME \
     --region $AWS_REGION \
     --query 'Stacks[0].Outputs[?OutputKey==`PipelineUrl`].OutputValue' \
