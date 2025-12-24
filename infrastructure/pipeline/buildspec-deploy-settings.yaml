@@ -5,6 +5,8 @@ phases:
     commands:
       - echo "Deploying Settings Lambda..."
       - echo "Lambda Role ARN - $LAMBDA_ROLE_ARN"
+      - echo "Copying built artifacts from secondary source..."
+      - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/v1/settings/dist api/v1/settings/ || echo "No settings dist"
       - echo "Retrieving Google OAuth credentials if auth enabled..."
       - |
         if [ "$ENABLE_AUTH" = "true" ] && [ -n "$GOOGLE_CREDENTIALS_SECRET_ARN" ]; then

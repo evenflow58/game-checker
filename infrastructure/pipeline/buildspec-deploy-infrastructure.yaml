@@ -6,6 +6,9 @@ phases:
       - echo "Deploying infrastructure (DynamoDB & API Gateway)..."
       - echo "AWS Region - $AWS_REGION"
       - echo "Environment - $ENVIRONMENT"
+      - echo "Copying built artifacts from secondary source..."
+      - cp -r $CODEBUILD_SRC_DIR_InfrastructureBuildOutput/infrastructure/database/dist infrastructure/database/ || echo "No database dist"
+      - cp -r $CODEBUILD_SRC_DIR_InfrastructureBuildOutput/infrastructure/apiGateway/dist infrastructure/apiGateway/ || echo "No apiGateway dist"
 
   build:
     commands:

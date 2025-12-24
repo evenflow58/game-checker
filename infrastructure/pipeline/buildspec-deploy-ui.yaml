@@ -4,6 +4,8 @@ phases:
   pre_build:
     commands:
       - echo "Deploying UI to S3 and CloudFront..."
+      - echo "Copying built UI from secondary source..."
+      - cp -r $CODEBUILD_SRC_DIR_UIBuildOutput/ui/dist ui/ || echo "No UI dist"
 
   build:
     commands:

@@ -5,6 +5,10 @@ phases:
     commands:
       - echo "Deploying Health Lambda..."
       - echo "Lambda Role ARN - $LAMBDA_ROLE_ARN"
+      - echo "Copying built artifacts from secondary source..."
+      - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/health/dist api/health/ || echo "No health dist"
+      - echo "Copying built artifacts from secondary source..."
+      - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/health/dist api/health/ || echo "No health dist"
 
   build:
     commands:
