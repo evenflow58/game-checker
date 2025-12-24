@@ -506,6 +506,7 @@ Resources:
               Configuration:
                 ProjectName: !Ref DeployInfrastructureProject
               InputArtifacts:
+                - Name: SourceOutput
                 - Name: InfrastructureBuildOutput
               OutputArtifacts:
                 - Name: InfrastructureDeployOutput
@@ -522,6 +523,7 @@ Resources:
               Configuration:
                 ProjectName: !Ref DeployHealthProject
               InputArtifacts:
+                - Name: SourceOutput
                 - Name: LambdasBuildOutput
               OutputArtifacts:
                 - Name: HealthDeployOutput
@@ -535,6 +537,7 @@ Resources:
               Configuration:
                 ProjectName: !Ref DeploySettingsProject
               InputArtifacts:
+                - Name: SourceOutput
                 - Name: LambdasBuildOutput
               OutputArtifacts:
                 - Name: SettingsDeployOutput
@@ -552,6 +555,7 @@ Resources:
               Configuration:
                 ProjectName: !Ref DeployUIProject
               InputArtifacts:
+                - Name: SourceOutput
                 - Name: UIBuildOutput
               OutputArtifacts:
                 - Name: UIDeployOutput
