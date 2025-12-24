@@ -59,9 +59,6 @@ if (ENDPOINT) {
 
 const lambdaClient = new LambdaClient(lambdaConfig);
 const apiClient = new ApiGatewayV2Client(apiConfig);
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-  },
-});
 
 async function createZipFile(): Promise<Buffer> {
   const zipPath = join(__dirname, "function.zip");
