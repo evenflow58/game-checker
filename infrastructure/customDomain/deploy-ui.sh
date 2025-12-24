@@ -8,7 +8,7 @@ STACK_NAME="game-checker-custom-domain-dev"
 
 echo "🏗️  Building Angular UI..."
 cd "$UI_DIR"
-npm run build --configuration production
+npm run build -- --configuration production
 
 echo ""
 echo "📦 Getting S3 bucket name from CloudFormation..."

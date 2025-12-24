@@ -66,6 +66,35 @@ phases:
         export GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
         node dist/deploy.js
       - cd ../..
+      - echo "Building and Deploying UI..."
+      - cd ui
+      - npm ci
+      - npm run build -- --configuration production
+      - |
+        BUCKET_NAME=$(aws cloudformation describe-stacks \
+          --stack-name game-checker-custom-domain-${ENVIRONMENT} \
+          --region $AWS_REGION \
+          --query 'Stacks[0].Outputs[?OutputKey==`UiBucketName`].OutputValue' \
+          --output text 2>/dev/null || echo "")
+        
+        if [ -n "$BUCKET_NAME" ]; then
+          echo "Uploading UI to S3 bucket: $BUCKET_NAME"
+          aws s3 sync dist/ui/browser "s3://$BUCKET_NAME" --delete
+          
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name game-checker-custom-domain-${ENVIRONMENT} \
+            --region $AWS_REGION \
+            --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
+            --output text 2>/dev/null || echo "")
+          
+          if [ -n "$DISTRIBUTION_ID" ]; then
+            echo "Creating CloudFront invalidation..."
+            aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
+          fi
+        else
+          echo "Custom domain stack not found, skipping UI deployment"
+        fi
+      - cd ..
       
   post_build:
     commands:
@@ -77,6 +106,8 @@ phases:
         echo "=== Deployment Summary ==="
         echo "API ID - $API_ID"
         echo "API Endpoint - https://$API_ID.execute-api.$AWS_REGION.amazonaws.com"
+        echo "Custom API URL - https://api.doiownthatgame.com"
+        echo "Custom UI URL - https://doiownthatgame.com"
         echo ""
         echo "Available Routes:"
         aws apigatewayv2 get-routes --api-id $API_ID --region $AWS_REGION --query "Items[].RouteKey" --output table

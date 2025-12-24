@@ -46,6 +46,17 @@ phases:
       - test -d api/health && cd api/health && npm run build && cd ../.. || echo "api/health build failed"
       - echo "Building api/v1/settings..."
       - test -d api/v1/settings && cd api/v1/settings && npm run build && cd ../../.. || echo "api/v1/settings build failed"
+      # Build UI (Angular)
+      - echo "Building UI (Angular)..."
+      - |
+        if [ -d ui ]; then
+          cd ui
+          npm ci
+          npm run build -- --configuration production
+          cd ..
+        else
+          echo "ui folder not found, skipping UI build"
+        fi
       
   post_build:
     commands:
@@ -54,6 +65,7 @@ phases:
       - echo "Listing built artifacts..."
       - test -d infrastructure && find infrastructure -name "dist" -type d || echo "No infrastructure dist folders"
       - test -d api && find api -name "dist" -type d || echo "No api dist folders"
+      - test -d ui/dist && echo "UI built successfully" || echo "No UI dist folder"
 
 artifacts:
   files:
