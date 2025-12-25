@@ -18,12 +18,26 @@ phases:
         else
           echo "No tests found for health endpoint"
         fi
-      - echo "Testing api/v1/settings..."
+      - echo "Testing api/v1/settings/get..."
       - |
-        if [ -f "api/v1/settings/package.json" ] && grep -q '"test"' api/v1/settings/package.json; then
-          cd api/v1/settings && npm test && cd ../../..
+        if [ -f "api/v1/settings/get/package.json" ] && grep -q '"test"' api/v1/settings/get/package.json; then
+          cd api/v1/settings/get && npm test && cd ../../../..
         else
-          echo "No tests found for settings endpoint"
+          echo "No tests found for settings GET endpoint"
+        fi
+      - echo "Testing api/v1/settings/put..."
+      - |
+        if [ -f "api/v1/settings/put/package.json" ] && grep -q '"test"' api/v1/settings/put/package.json; then
+          cd api/v1/settings/put && npm test && cd ../../../..
+        else
+          echo "No tests found for settings PUT endpoint"
+        fi
+      - echo "Testing api/v1/user/post..."
+      - |
+        if [ -f "api/v1/user/post/package.json" ] && grep -q '"test"' api/v1/user/post/package.json; then
+          cd api/v1/user/post && npm test && cd ../../../..
+        else
+          echo "No tests found for user POST endpoint"
         fi
       
   post_build:

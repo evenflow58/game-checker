@@ -14,16 +14,24 @@ phases:
       - echo "Installing Lambda function dependencies..."
       - echo "Installing api/health dependencies..."
       - cd api/health && npm ci --ignore-scripts && cd ../..
-      - echo "Installing api/v1/settings dependencies..."
-      - cd api/v1/settings && npm ci --ignore-scripts && cd ../../..
+      - echo "Installing api/v1/settings/get dependencies..."
+      - cd api/v1/settings/get && npm ci --ignore-scripts && cd ../../../..
+      - echo "Installing api/v1/settings/put dependencies..."
+      - cd api/v1/settings/put && npm ci --ignore-scripts && cd ../../../..
+      - echo "Installing api/v1/user/post dependencies..."
+      - cd api/v1/user/post && npm ci --ignore-scripts && cd ../../../..
       
   build:
     commands:
       - echo "Building Lambda functions..."
       - echo "Building api/health..."
       - cd api/health && npm run build && cd ../..
-      - echo "Building api/v1/settings..."
-      - cd api/v1/settings && npm run build && cd ../../..
+      - echo "Building api/v1/settings/get..."
+      - cd api/v1/settings/get && npm run build && cd ../../../..
+      - echo "Building api/v1/settings/put..."
+      - cd api/v1/settings/put && npm run build && cd ../../../..
+      - echo "Building api/v1/user/post..."
+      - cd api/v1/user/post && npm run build && cd ../../../..
       
   post_build:
     commands:
@@ -38,4 +46,6 @@ artifacts:
 cache:
   paths:
     - 'api/health/node_modules/**/*'
-    - 'api/v1/settings/node_modules/**/*'
+    - 'api/v1/settings/get/node_modules/**/*'
+    - 'api/v1/settings/put/node_modules/**/*'
+    - 'api/v1/user/post/node_modules/**/*'
