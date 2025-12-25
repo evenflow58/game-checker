@@ -71,6 +71,9 @@ export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 export AWS_PAGER=""
 
+# Steam API key for local development
+export STEAM_API_KEY="${STEAM_API_KEY:-48B96CB7DD72E7BB868F16F16BFA4431}"
+
 info "AWS Region: ${AWS_DEFAULT_REGION}"
 info "LocalStack Endpoint: ${LOCALSTACK_ENDPOINT}"
 echo ""
@@ -160,6 +163,44 @@ if [ $? -eq 0 ]; then
     info "Database Table: ${DB_TABLE_NAME}"
 else
     error "Database setup failed!"
+    exit 1
+fi
+
+echo ""
+
+# Setup Secrets Manager
+info "Setting up Secrets Manager..."
+info "Creating/updating API keys secret in LocalStack..."
+
+# Create or update the GameChecker/APIKeys secret with the Steam API key
+aws secretsmanager describe-secret \
+    --secret-id GameChecker/APIKeys \
+    --endpoint-url "${LOCALSTACK_ENDPOINT}" \
+    --region "${AWS_DEFAULT_REGION}" \
+    &>/dev/null
+
+if [ $? -eq 0 ]; then
+    info "Secret exists, updating..."
+    aws secretsmanager update-secret \
+        --secret-id GameChecker/APIKeys \
+        --secret-string "{\"SteamAPI\":\"${STEAM_API_KEY}\"}" \
+        --endpoint-url "${LOCALSTACK_ENDPOINT}" \
+        --region "${AWS_DEFAULT_REGION}" \
+        &>/dev/null
+else
+    info "Creating new secret..."
+    aws secretsmanager create-secret \
+        --name GameChecker/APIKeys \
+        --secret-string "{\"SteamAPI\":\"${STEAM_API_KEY}\"}" \
+        --endpoint-url "${LOCALSTACK_ENDPOINT}" \
+        --region "${AWS_DEFAULT_REGION}" \
+        &>/dev/null
+fi
+
+if [ $? -eq 0 ]; then
+    info "✓ Secrets Manager setup completed successfully"
+else
+    error "Secrets Manager setup failed!"
     exit 1
 fi
 
@@ -408,6 +449,22 @@ info "=== Deploying Games Steam GET Endpoint ==="
         info "Games Steam GET dependencies already installed and built"
     fi
     
+    # Retrieve Steam API key from LocalStack Secrets Manager
+    info "Retrieving Steam API key from Secrets Manager..."
+    STEAM_API_KEY=$(aws secretsmanager get-secret-value \
+        --secret-id GameChecker/APIKeys \
+        --endpoint-url "${LOCALSTACK_ENDPOINT}" \
+        --region "${AWS_DEFAULT_REGION}" \
+        --query 'SecretString' \
+        --output text 2>/dev/null | jq -r '.SteamAPI' 2>/dev/null || echo "")
+    
+    if [ -z "$STEAM_API_KEY" ]; then
+        error "Steam API key not found in Secrets Manager!"
+        exit 1
+    fi
+    
+    info "✓ Steam API key retrieved from Secrets Manager"
+    
     # Run the deployment script
     info "Deploying Games Steam GET endpoint..."
     FUNCTION_NAME="GamesSteamGet" \
@@ -417,7 +474,7 @@ info "=== Deploying Games Steam GET Endpoint ==="
     ENABLE_AUTH="false" \
     TABLE_NAME="${DB_TABLE_NAME}" \
     DYNAMODB_ENDPOINT="${LAMBDA_LOCALSTACK_ENDPOINT}" \
-    STEAM_API_KEY="${STEAM_API_KEY:-your_steam_api_key_here}" \
+    STEAM_API_KEY="${STEAM_API_KEY}" \
     node dist/deploy.js
 )
 
