@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { GamesService, SteamGame } from '../services/games.service';
@@ -7,7 +8,7 @@ import { GamesService, SteamGame } from '../services/games.service';
 @Component({
   selector: 'app-games',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="games-container">
       <header class="header">
@@ -36,11 +37,27 @@ import { GamesService, SteamGame } from '../services/games.service';
         <div *ngIf="!loading() && !error() && games().length > 0" class="games-list">
           <div class="games-header">
             <h2>Your Steam Library</h2>
-            <p class="game-count">{{ games().length }} games</p>
+            <p class="game-count">{{ filteredGames().length }} of {{ games().length }} games</p>
+          </div>
+          
+          <div class="controls">
+            <input 
+              type="text" 
+              class="search-input" 
+              placeholder="Search games..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()"
+            >
+            <select class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange()">
+              <option value="name">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="playtime">Most Played</option>
+              <option value="playtime-asc">Least Played</option>
+            </select>
           </div>
           
           <div class="games-grid">
-            <div *ngFor="let game of games()" class="game-card">
+            <div *ngFor="let game of filteredGames()" class="game-card">
               <div class="game-image">
                 <img 
                   *ngIf="game.img_logo_url || game.img_icon_url" 
@@ -444,6 +461,41 @@ import { GamesService, SteamGame } from '../services/games.service';
       font-size: 1.1rem;
       margin-bottom: 2rem;
     }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: #667eea;
+    }
+
+    .sort-select {
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: white;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .sort-select:focus {
+      border-color: #667eea;
+    }
   `]
 })
 export class GamesComponent implements OnInit {
@@ -454,6 +506,39 @@ export class GamesComponent implements OnInit {
   games = signal<SteamGame[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
+  searchTerm = '';
+  sortBy = 'name';
+
+  filteredGames = computed(() => {
+    let filtered = this.games();
+
+    // Apply search filter
+    if (this.searchTerm) {
+      const search = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(game => 
+        game.name.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply sorting
+    const sorted = [...filtered];
+    switch (this.sortBy) {
+      case 'name':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'name-desc':
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case 'playtime':
+        sorted.sort((a, b) => b.playtime_forever - a.playtime_forever);
+        break;
+      case 'playtime-asc':
+        sorted.sort((a, b) => a.playtime_forever - b.playtime_forever);
+        break;
+    }
+
+    return sorted;
+  });
 
   ngOnInit() {
     if (!this.authService.isAuthenticated()) {
@@ -461,6 +546,16 @@ export class GamesComponent implements OnInit {
       return;
     }
     this.loadGames();
+  }
+
+  onSearchChange() {
+    // Trigger computed signal update
+    this.games.set([...this.games()]);
+  }
+
+  onSortChange() {
+    // Trigger computed signal update
+    this.games.set([...this.games()]);
   }
 
   loadGames() {
