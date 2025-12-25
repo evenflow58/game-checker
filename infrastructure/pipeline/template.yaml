@@ -47,7 +47,7 @@ Parameters:
   SteamApiKeySecretArn:
     Type: String
     Description: ARN of Steam API key stored in AWS Secrets Manager
-    Default: ""
+    Default: arn:aws:secretsmanager:us-east-1:625961017727:secret:GameChecker/APIKeys-GA3ilT
 
 Resources:
   # S3 Bucket for Pipeline Artifacts

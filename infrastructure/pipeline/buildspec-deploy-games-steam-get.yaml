@@ -23,7 +23,7 @@ phases:
       - |
         if [ -n "$STEAM_API_KEY_SECRET_ARN" ]; then
           echo "Retrieving Steam API key from Secrets Manager..."
-          STEAM_API_KEY=$(aws secretsmanager get-secret-value --secret-id $STEAM_API_KEY_SECRET_ARN --region $AWS_REGION --query 'SecretString' --output text)
+          STEAM_API_KEY=$(aws secretsmanager get-secret-value --secret-id $STEAM_API_KEY_SECRET_ARN --region $AWS_REGION --query 'SecretString' --output text | jq -r '.SteamAPI')
           export STEAM_API_KEY
           echo "Steam API key retrieved successfully"
         else
