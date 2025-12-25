@@ -33,7 +33,8 @@ import { SettingsService, UserSettings } from '../services/settings.service';
             <input 
               type="text" 
               id="steamId" 
-              [(ngModel)]="steamId"
+              [ngModel]="steamId()"
+              (ngModelChange)="steamId.set($event)"
               placeholder="Enter your Steam ID"
               class="input-field"
             >
@@ -258,7 +259,7 @@ export class SettingsComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   
-  steamId = '';
+  steamId = signal('');
   saving = signal(false);
   saveSuccess = signal(false);
   saveError = signal<string | null>(null);
@@ -279,8 +280,8 @@ export class SettingsComponent implements OnInit {
       next: (data) => {
         console.log('Settings loaded:', data);
         console.log('Steam ID from data:', data.steamId);
-        this.settings.set(data);
-        this.steamId = data.steamId || '';
+        this.setting.set(data.steamId || '');
+        console.log('Steam ID set to:', this.steamId()
         console.log('Steam ID set to:', this.steamId);
         this.loading.set(false);
       },
@@ -296,7 +297,7 @@ export class SettingsComponent implements OnInit {
     this.saving.set(true);
     this.saveSuccess.set(false);
     this.saveError.set(null);
-
+()
     this.settingsService.updateSteamId(this.steamId).subscribe({
       next: () => {
         this.saving.set(false);
