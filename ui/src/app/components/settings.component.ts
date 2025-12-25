@@ -277,8 +277,11 @@ export class SettingsComponent implements OnInit {
 
     this.settingsService.getSettings().subscribe({
       next: (data) => {
+        console.log('Settings loaded:', data);
+        console.log('Steam ID from data:', data.steamId);
         this.settings.set(data);
         this.steamId = data.steamId || '';
+        console.log('Steam ID set to:', this.steamId);
         this.loading.set(false);
       },
       error: (err) => {
