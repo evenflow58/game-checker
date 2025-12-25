@@ -1,6 +1,7 @@
 import { Component, OnInit, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { SettingsService } from '../services/settings.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -209,6 +210,7 @@ export class LoginComponent implements OnInit {
   @ViewChild('googleButton', { static: true }) googleButton!: ElementRef;
   
   private authService = inject(AuthService);
+  private settingsService = inject(SettingsService);
   private router = inject(Router);
 
   signingIn = signal(false);
@@ -309,11 +311,34 @@ export class LoginComponent implements OnInit {
     { title: 'KNIGHT QUEST', genre: 'Medieval', gradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', icon: '🛡️' },
   ];
 
+  private redirectAfterAuth() {
+    this.signingIn.set(true);
+    
+    // Check if user has any system IDs configured
+    this.settingsService.getSettings().subscribe({
+      next: (data) => {
+        const hasSystemIds = data.steamId && data.steamId.length > 0;
+        
+        if (hasSystemIds) {
+          // User has at least one system ID, go to games page
+          // TODO: Create games page, for now go to settings
+          this.router.navigate(['/settings']);
+        } else {
+          // User needs to configure system IDs, go to settings
+          this.router.navigate(['/settings']);
+        }
+      },
+      error: () => {
+        // On error, default to settings page
+        this.router.navigate(['/settings']);
+      }
+    });
+  }
+
   async ngOnInit() {
-    // If already authenticated, redirect to settings
+    // If already authenticated, redirect appropriately
     if (this.authService.isAuthenticated()) {
-      this.signingIn.set(true);
-      this.router.navigate(['/settings']);
+      this.redirectAfterAuth();
       return;
     }
 
@@ -323,8 +348,7 @@ export class LoginComponent implements OnInit {
     // Watch for authentication changes
     setInterval(() => {
       if (this.authService.isAuthenticated()) {
-        this.signingIn.set(true);
-        this.router.navigate(['/settings']);
+        this.redirectAfterAuth();
       }
     }, 500);
   }
