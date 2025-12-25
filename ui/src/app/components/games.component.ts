@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { GamesService, SteamGame } from '../services/games.service';
 
 @Component({
   selector: 'app-games',
@@ -20,26 +21,52 @@ import { AuthService } from '../services/auth.service';
       </header>
 
       <main class="content">
-        <div class="placeholder-container">
-          <div class="placeholder-icon">🎮</div>
-          <h2>Games Page Coming Soon!</h2>
-          <p class="placeholder-text">
-            This is where you'll see your game library and check which games you own across different platforms.
-          </p>
-          <div class="features-list">
-            <div class="feature-item">
-              <span class="feature-icon">✓</span>
-              <span>View games from your Steam library</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">✓</span>
-              <span>Cross-platform game tracking</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">✓</span>
-              <span>Check game ownership before buying</span>
+        <div *ngIf="loading()" class="loading-container">
+          <div class="spinner"></div>
+          <p>Loading your games...</p>
+        </div>
+
+        <div *ngIf="error()" class="error-container">
+          <div class="error-icon">⚠️</div>
+          <h2>Unable to load games</h2>
+          <p>{{ error() }}</p>
+          <button (click)="loadGames()" class="btn-retry">Try Again</button>
+        </div>
+
+        <div *ngIf="!loading() && !error() && games().length > 0" class="games-list">
+          <div class="games-header">
+            <h2>Your Steam Library</h2>
+            <p class="game-count">{{ games().length }} games</p>
+          </div>
+          
+          <div class="games-grid">
+            <div *ngFor="let game of games()" class="game-card">
+              <div class="game-image">
+                <img 
+                  *ngIf="game.img_logo_url" 
+                  [src]="getGameImageUrl(game)" 
+                  [alt]="game.name"
+                  (error)="onImageError($event)"
+                >
+                <div *ngIf="!game.img_logo_url" class="game-placeholder">🎮</div>
+              </div>
+              <div class="game-info">
+                <h3 class="game-name">{{ game.name }}</h3>
+                <p class="game-playtime" *ngIf="game.playtime_forever > 0">
+                  {{ formatPlaytime(game.playtime_forever) }} played
+                </p>
+              </div>
             </div>
           </div>
+        </div>
+
+        <div *ngIf="!loading() && !error() && games().length === 0" class="empty-state">
+          <div class="placeholder-icon">🎮</div>
+          <h2>No games found</h2>
+          <p class="placeholder-text">
+            Make sure your Steam ID is configured correctly in settings.
+          </p>
+          <button (click)="goToSettings()" class="btn-settings">Go to Settings</button>
         </div>
       </main>
     </div>
@@ -192,16 +219,240 @@ import { AuthService } from '../services/auth.service';
       color: #333;
       font-weight: 500;
     }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 1rem;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f4f6;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-container p {
+      color: #666;
+      font-size: 1.1rem;
+    }
+
+    .error-container {
+      background: white;
+      padding: 4rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .error-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .error-container h2 {
+      color: #dc3545;
+      margin: 0 0 1rem 0;
+    }
+
+    .error-container p {
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-retry {
+      padding: 0.75rem 1.5rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn-retry:hover {
+      background: #5568d3;
+    }
+
+    .games-list {
+      width: 100%;
+    }
+
+    .games-header {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .games-header h2 {
+      margin: 0;
+      color: #333;
+      font-size: 1.8rem;
+    }
+
+    .game-count {
+      color: #666;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .game-image {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .game-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .game-placeholder {
+      font-size: 3rem;
+      opacity: 0.5;
+    }
+
+    .game-info {
+      padding: 1rem;
+    }
+
+    .game-name {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .game-playtime {
+      margin: 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .empty-state {
+      background: white;
+      padding: 4rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .empty-state .placeholder-icon {
+      font-size: 6rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.3;
+    }
+
+    .empty-state h2 {
+      color: #333;
+      font-size: 2rem;
+      margin: 0 0 1rem 0;
+    }
+
+    .empty-state .placeholder-text {
+      color: #666;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
   `]
 })
 export class GamesComponent implements OnInit {
   authService = inject(AuthService);
   private router = inject(Router);
+  private gamesService = inject(GamesService);
+
+  games = signal<SteamGame[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
 
   ngOnInit() {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
+      return;
     }
+    this.loadGames();
+  }
+
+  loadGames() {
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.gamesService.getSteamGames().subscribe({
+      next: (response) => {
+        this.games.set(response.games || []);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading games:', err);
+        this.error.set(err.error?.message || 'Failed to load games. Please try again.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  getGameImageUrl(game: SteamGame): string {
+    if (game.img_logo_url) {
+      return `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_logo_url}.jpg`;
+    }
+    return '';
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+
+  formatPlaytime(minutes: number): string {
+    if (minutes < 60) {
+      return `${minutes} minutes`;
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours === 1) {
+      return '1 hour';
+    }
+    return `${hours} hours`;
   }
 
   goToSettings() {
