@@ -389,6 +389,47 @@ fi
 
 echo ""
 
+# Deploy Games Steam GET endpoint
+info "=== Deploying Games Steam GET Endpoint ==="
+(
+    cd "${SCRIPT_DIR}/api/v1/games/steam/get" || exit 1
+    
+    # Check if node_modules exists and package.json is newer
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+        info "Installing dependencies for Games Steam GET..."
+        npm install
+        
+        # Build TypeScript if needed
+        if [ -f "tsconfig.json" ] && [ ! -d "dist" ]; then
+            info "Compiling TypeScript..."
+            npx tsc
+        fi
+    else
+        info "Games Steam GET dependencies already installed and built"
+    fi
+    
+    # Run the deployment script
+    info "Deploying Games Steam GET endpoint..."
+    FUNCTION_NAME="GamesSteamGet" \
+    API_NAME="GameCheckerAPI" \
+    API_GATEWAY_ENDPOINT="${LOCALSTACK_ENDPOINT}" \
+    AWS_REGION="${AWS_DEFAULT_REGION}" \
+    ENABLE_AUTH="false" \
+    TABLE_NAME="${DB_TABLE_NAME}" \
+    DYNAMODB_ENDPOINT="${LAMBDA_LOCALSTACK_ENDPOINT}" \
+    STEAM_API_KEY="${STEAM_API_KEY:-your_steam_api_key_here}" \
+    node dist/deploy.js
+)
+
+if [ $? -eq 0 ]; then
+    info "✓ Games Steam GET deployment completed successfully"
+else
+    error "Games Steam GET deployment failed!"
+    exit 1
+fi
+
+echo ""
+
 # Get API Gateway information
 info "Fetching API Gateway details..."
 API_INFO=$(aws apigatewayv2 get-apis \
