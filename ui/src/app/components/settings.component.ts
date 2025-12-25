@@ -280,9 +280,9 @@ export class SettingsComponent implements OnInit {
       next: (data) => {
         console.log('Settings loaded:', data);
         console.log('Steam ID from data:', data.steamId);
-        this.setting.set(data.steamId || '');
-        console.log('Steam ID set to:', this.steamId()
-        console.log('Steam ID set to:', this.steamId);
+        this.settings.set(data);
+        this.steamId.set(data.steamId || '');
+        console.log('Steam ID set to:', this.steamId());
         this.loading.set(false);
       },
       error: (err) => {
@@ -297,8 +297,8 @@ export class SettingsComponent implements OnInit {
     this.saving.set(true);
     this.saveSuccess.set(false);
     this.saveError.set(null);
-()
-    this.settingsService.updateSteamId(this.steamId).subscribe({
+
+    this.settingsService.updateSteamId(this.steamId()).subscribe({
       next: () => {
         this.saving.set(false);
         this.saveSuccess.set(true);
