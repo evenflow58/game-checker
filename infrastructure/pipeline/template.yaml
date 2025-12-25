@@ -332,11 +332,11 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspec-deploy-health.yaml
 
-  # Deploy Settings Lambda Project
-  DeploySettingsProject:
+  # Deploy Settings GET Lambda Project
+  DeploySettingsGetProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub '${Environment}-GameChecker-Deploy-Settings'
+      Name: !Sub '${Environment}-GameChecker-Deploy-SettingsGet'
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Artifacts:
         Type: CODEPIPELINE
@@ -357,7 +357,61 @@ Resources:
             Value: !GetAtt LambdaExecutionRole.Arn
       Source:
         Type: CODEPIPELINE
-        BuildSpec: infrastructure/pipeline/buildspec-deploy-settings.yaml
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-settings-get.yaml
+
+  # Deploy Settings PUT Lambda Project
+  DeploySettingsPutProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Deploy-SettingsPut'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+          - Name: GOOGLE_CREDENTIALS_SECRET_ARN
+            Value: !Ref GoogleCredentialsSecretArn
+          - Name: ENABLE_AUTH
+            Value: !Ref EnableAuth
+          - Name: LAMBDA_ROLE_ARN
+            Value: !GetAtt LambdaExecutionRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-settings-put.yaml
+
+  # Deploy User POST Lambda Project
+  DeployUserProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Deploy-User'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+          - Name: GOOGLE_CREDENTIALS_SECRET_ARN
+            Value: !Ref GoogleCredentialsSecretArn
+          - Name: ENABLE_AUTH
+            Value: !Ref EnableAuth
+          - Name: LAMBDA_ROLE_ARN
+            Value: !GetAtt LambdaExecutionRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-user.yaml
 
   # Deploy UI Project
   DeployUIProject:
@@ -530,20 +584,50 @@ Resources:
               OutputArtifacts:
                 - Name: HealthDeployOutput
               RunOrder: 1
-            - Name: DeploySettings
+            - Name: DeploySettingsGet
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeploySettingsProject
+                ProjectName: !Ref DeploySettingsGetProject
                 PrimarySource: SourceOutput
               InputArtifacts:
                 - Name: SourceOutput
                 - Name: LambdasBuildOutput
               OutputArtifacts:
-                - Name: SettingsDeployOutput
+                - Name: SettingsGetDeployOutput
+              RunOrder: 1
+            - Name: DeploySettingsPut
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref DeploySettingsPutProject
+                PrimarySource: SourceOutput
+              InputArtifacts:
+                - Name: SourceOutput
+                - Name: LambdasBuildOutput
+              OutputArtifacts:
+                - Name: SettingsPutDeployOutput
+              RunOrder: 1
+            - Name: DeployUser
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref DeployUserProject
+                PrimarySource: SourceOutput
+              InputArtifacts:
+                - Name: SourceOutput
+                - Name: LambdasBuildOutput
+              OutputArtifacts:
+                - Name: UserDeployOutput
               RunOrder: 1
                 
         # Deploy UI Stage

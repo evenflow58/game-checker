@@ -149,7 +149,6 @@ async function deployLambda(): Promise<string> {
           NODE_ENV: "development",
           TABLE_NAME: TABLE_NAME,
           DYNAMODB_ENDPOINT: DYNAMODB_ENDPOINT || "",
-          AWS_REGION: REGION,
         },
       },
     });
@@ -174,7 +173,6 @@ async function deployLambda(): Promise<string> {
         NODE_ENV: "development",
         TABLE_NAME: TABLE_NAME,
         DYNAMODB_ENDPOINT: DYNAMODB_ENDPOINT || "",
-        AWS_REGION: REGION,
       },
     },
   });

@@ -3,7 +3,7 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo "Deploying Settings Lambdas..."
+      - echo "Deploying API Lambdas (Settings and User endpoints)..."
       - echo "Lambda Role ARN - $LAMBDA_ROLE_ARN"
       - echo "Copying built artifacts from secondary source..."
       - cp -r $CODEBUILD_SRC_DIR_LambdasBuildOutput/api/v1/settings/get/dist api/v1/settings/get/ || echo "No settings GET dist"
@@ -66,4 +66,4 @@ phases:
 
   post_build:
     commands:
-      - echo "✅ Settings and User Lambdas deployed!"
+      - echo "✅ API Lambdas deployed (Settings GET/PUT and User POST)!"
