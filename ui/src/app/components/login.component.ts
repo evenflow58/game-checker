@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -21,7 +21,12 @@ import { CommonModule } from '@angular/common';
         <h1>Game Checker</h1>
         <p class="subtitle">Sign in to manage your game settings</p>
         
-        <div #googleButton class="google-button-container"></div>
+        <div *ngIf="signingIn()" class="signing-in-overlay">
+          <div class="spinner"></div>
+          <p>Signing you in...</p>
+        </div>
+        
+        <div #googleButton class="google-button-container" [class.hidden]="signingIn()"></div>
         
         <p class="info-text">
           Sign in with your Google account to access your personalized settings
@@ -159,6 +164,39 @@ import { CommonModule } from '@angular/common';
       justify-content: center;
       margin: 2rem 0;
     }
+
+    .google-button-container.hidden {
+      visibility: hidden;
+    }
+
+    .signing-in-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 0;
+      margin: 2rem 0;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .signing-in-overlay p {
+      margin-top: 1rem;
+      color: #667eea;
+      font-size: 1rem;
+      font-weight: 500;
+    }
     
     .info-text {
       color: #888;
@@ -172,6 +210,8 @@ export class LoginComponent implements OnInit {
   
   private authService = inject(AuthService);
   private router = inject(Router);
+
+  signingIn = signal(false);
 
   // Fake video game box covers with vibrant gradients and icons
   games = [
@@ -272,6 +312,7 @@ export class LoginComponent implements OnInit {
   async ngOnInit() {
     // If already authenticated, redirect to settings
     if (this.authService.isAuthenticated()) {
+      this.signingIn.set(true);
       this.router.navigate(['/settings']);
       return;
     }
@@ -282,6 +323,7 @@ export class LoginComponent implements OnInit {
     // Watch for authentication changes
     setInterval(() => {
       if (this.authService.isAuthenticated()) {
+        this.signingIn.set(true);
         this.router.navigate(['/settings']);
       }
     }, 500);

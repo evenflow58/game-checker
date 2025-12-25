@@ -21,7 +21,12 @@ import { SettingsService, UserSettings } from '../services/settings.service';
       </header>
 
       <main class="content">
-        <div class="card steam-section">
+        <div *ngIf="loading()" class="loading-overlay">
+          <div class="spinner"></div>
+          <p>Loading settings...</p>
+        </div>
+
+        <div class="card steam-section" [class.disabled]="loading()">
           <h2>Steam Integration</h2>
           
           <div class="steam-description">
@@ -37,6 +42,7 @@ import { SettingsService, UserSettings } from '../services/settings.service';
               (ngModelChange)="steamId.set($event)"
               placeholder="Enter your Steam ID"
               class="input-field"
+              [disabled]="loading() || saving()"
             >
             <small class="help-text">Find your Steam ID at <a href="https://steamid.io/" target="_blank">steamid.io</a></small>
           </div>
@@ -45,8 +51,9 @@ import { SettingsService, UserSettings } from '../services/settings.service';
             <button 
               (click)="saveSteamId()" 
               class="btn-save"
-              [disabled]="saving()"
+              [disabled]="saving() || loading()"
             >
+              <span *ngIf="saving()" class="btn-spinner"></span>
               {{ saving() ? 'Saving...' : 'Save Steam ID' }}
             </button>
           </div>
@@ -190,6 +197,12 @@ import { SettingsService, UserSettings } from '../services/settings.service';
       border-color: #667eea;
     }
 
+    .input-field:disabled {
+      background: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+
     .help-text {
       display: block;
       margin-top: 0.5rem;
@@ -221,6 +234,9 @@ import { SettingsService, UserSettings } from '../services/settings.service';
       font-weight: 500;
       font-size: 1rem;
       transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-save:hover:not(:disabled) {
@@ -230,6 +246,53 @@ import { SettingsService, UserSettings } from '../services/settings.service';
     .btn-save:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: 12px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-overlay p {
+      margin-top: 1rem;
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .card.disabled {
+      position: relative;
     }
 
     .success-message {
