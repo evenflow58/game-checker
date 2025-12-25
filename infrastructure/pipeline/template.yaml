@@ -43,6 +43,11 @@ Parameters:
     AllowedValues:
       - "true"
       - "false"
+      
+  SteamApiKeySecretArn:
+    Type: String
+    Description: ARN of Steam API key stored in AWS Secrets Manager
+    Default: ""
 
 Resources:
   # S3 Bucket for Pipeline Artifacts
@@ -417,6 +422,35 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspec-deploy-user.yaml
 
+  # Deploy Games Steam GET Lambda Project
+  DeployGamesSteamGetProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${Environment}-GameChecker-Deploy-GamesSteamGet'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+          - Name: GOOGLE_CREDENTIALS_SECRET_ARN
+            Value: !Ref GoogleCredentialsSecretArn
+          - Name: ENABLE_AUTH
+            Value: !Ref EnableAuth
+          - Name: LAMBDA_ROLE_ARN
+            Value: !GetAtt LambdaExecutionRole.Arn
+          - Name: STEAM_API_KEY_SECRET_ARN
+            Value: !Ref SteamApiKeySecretArn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infrastructure/pipeline/buildspec-deploy-games-steam-get.yaml
+
   # Deploy UI Project
   DeployUIProject:
     Type: AWS::CodeBuild::Project
@@ -632,6 +666,21 @@ Resources:
                 - Name: LambdasBuildOutput
               OutputArtifacts:
                 - Name: UserDeployOutput
+              RunOrder: 1
+            - Name: DeployGamesSteamGet
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref DeployGamesSteamGetProject
+                PrimarySource: SourceOutput
+              InputArtifacts:
+                - Name: SourceOutput
+                - Name: LambdasBuildOutput
+              OutputArtifacts:
+                - Name: GamesSteamGetDeployOutput
               RunOrder: 1
                 
         # Deploy UI Stage

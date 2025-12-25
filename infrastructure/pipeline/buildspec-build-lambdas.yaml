@@ -20,6 +20,8 @@ phases:
       - cd api/v1/settings/put && npm ci --ignore-scripts && cd ../../../..
       - echo "Installing api/v1/user/post dependencies..."
       - cd api/v1/user/post && npm ci --ignore-scripts && cd ../../../..
+      - echo "Installing api/v1/games/steam/get dependencies..."
+      - cd api/v1/games/steam/get && npm ci --ignore-scripts && cd ../../../../..
       
   build:
     commands:
@@ -32,6 +34,8 @@ phases:
       - cd api/v1/settings/put && npm run build && cd ../../../..
       - echo "Building api/v1/user/post..."
       - cd api/v1/user/post && npm run build && cd ../../../..
+      - echo "Building api/v1/games/steam/get..."
+      - cd api/v1/games/steam/get && npm run build && cd ../../../../..
       
   post_build:
     commands:
@@ -46,6 +50,7 @@ artifacts:
 cache:
   paths:
     - 'api/health/node_modules/**/*'
-    - 'api/v1/settings/get/node_modules/**/*'
+    - 'api/v1/settings/get/node_modules/**
+    - 'api/v1/games/steam/get/node_modules/**/*'/*'
     - 'api/v1/settings/put/node_modules/**/*'
     - 'api/v1/user/post/node_modules/**/*'
