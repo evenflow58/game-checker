@@ -43,12 +43,12 @@ import { GamesService, SteamGame } from '../services/games.service';
             <div *ngFor="let game of games()" class="game-card">
               <div class="game-image">
                 <img 
-                  *ngIf="game.img_icon_url" 
+                  *ngIf="game.img_logo_url" 
                   [src]="getGameImageUrl(game)" 
                   [alt]="game.name"
                   (error)="onImageError($event)"
                 >
-                <div *ngIf="!game.img_icon_url" class="game-placeholder">🎮</div>
+                <div *ngIf="!game.img_logo_url" class="game-placeholder">🎮</div>
               </div>
               <div class="game-info">
                 <div class="game-header">
@@ -474,8 +474,8 @@ export class GamesComponent implements OnInit {
   }
 
   getGameImageUrl(game: SteamGame): string {
-    if (game.img_icon_url) {
-      return `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`;
+    if (game.img_logo_url) {
+      return `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_logo_url}.jpg`;
     }
     return '';
   }
