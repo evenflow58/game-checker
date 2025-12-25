@@ -51,7 +51,14 @@ import { GamesService, SteamGame } from '../services/games.service';
                 <div *ngIf="!game.img_icon_url" class="game-placeholder">🎮</div>
               </div>
               <div class="game-info">
-                <h3 class="game-name">{{ game.name }}</h3>
+                <div class="game-header">
+                  <h3 class="game-name">{{ game.name }}</h3>
+                  <div class="platform-badge steam" title="Steam">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                    </svg>
+                  </div>
+                </div>
                 <p class="game-playtime" *ngIf="game.playtime_forever > 0">
                   {{ formatPlaytime(game.playtime_forever) }} played
                 </p>
@@ -316,27 +323,27 @@ import { GamesService, SteamGame } from '../services/games.service';
 
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
     }
 
     .game-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
       transition: transform 0.2s, box-shadow 0.2s;
       cursor: pointer;
     }
 
     .game-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
     .game-image {
       width: 100%;
-      height: 140px;
+      height: 70px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
       align-items: center;
@@ -351,30 +358,58 @@ import { GamesService, SteamGame } from '../services/games.service';
     }
 
     .game-placeholder {
-      font-size: 3rem;
+      font-size: 1.5rem;
       opacity: 0.5;
     }
 
     .game-info {
-      padding: 1rem;
+      padding: 0.5rem;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
     .game-name {
-      margin: 0 0 0.5rem 0;
+      flex: 1;
+      margin: 0;
       color: #333;
-      font-size: 1.1rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      line-height: 1.3;
+      line-height: 1.2;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
+    .platform-badge {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .platform-badge.steam {
+      background: #171a21;
+      color: white;
+    }
+
+    .platform-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+
     .game-playtime {
       margin: 0;
       color: #666;
-      font-size: 0.9rem;
+      font-size: 0.65rem;
     }
 
     .empty-state {
