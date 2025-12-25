@@ -5,12 +5,16 @@ import {
   CreateIntegrationCommand,
   GetApisCommand,
   GetRoutesCommand,
+  CreateAuthorizerCommand,
+  GetAuthorizersCommand,
 } from "@aws-sdk/client-apigatewayv2";
 
 const API_NAME = process.env.API_NAME || "GameCheckerAPI";
 const ENDPOINT = process.env.API_GATEWAY_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
 const LAMBDA_FUNCTION_ARN = process.env.LAMBDA_FUNCTION_ARN || "";
+const ENABLE_AUTH = process.env.ENABLE_AUTH === "true";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 
 const clientConfig: any = {
   region: REGION,
@@ -71,6 +75,44 @@ async function createApi(): Promise<void> {
     console.log(`✅ API created successfully!`);
     console.log(`   API ID: ${apiId}`);
     console.log(`   API Endpoint: ${apiResponse.ApiEndpoint}`);
+
+    // Create JWT authorizer if authentication is enabled
+    if (ENABLE_AUTH && GOOGLE_CLIENT_ID) {
+      console.log(`\nSetting up Google OAuth authorizer...`);
+      
+      try {
+        const authorizersResponse = await client.send(new GetAuthorizersCommand({ ApiId: apiId }));
+        const existingAuthorizer = authorizersResponse.Items?.find(
+          (auth) => auth.Name === "GoogleOAuthAuthorizer"
+        );
+        
+        if (existingAuthorizer) {
+          console.log(`✅ Google OAuth authorizer already exists (ID: ${existingAuthorizer.AuthorizerId})`);
+        } else {
+          const createAuthorizerCommand = new CreateAuthorizerCommand({
+            ApiId: apiId,
+            Name: "GoogleOAuthAuthorizer",
+            AuthorizerType: "JWT",
+            IdentitySource: ["$request.header.Authorization"],
+            JwtConfiguration: {
+              Audience: [GOOGLE_CLIENT_ID],
+              Issuer: "https://accounts.google.com",
+            },
+          });
+          
+          const authorizerResponse = await client.send(createAuthorizerCommand);
+          console.log(`✅ Google OAuth authorizer created (ID: ${authorizerResponse.AuthorizerId})`);
+          console.log(`   Client ID: ${GOOGLE_CLIENT_ID}`);
+        }
+      } catch (error: any) {
+        console.log(`  ⚠️  Could not create authorizer: ${error.message}`);
+      }
+    } else if (ENABLE_AUTH && !GOOGLE_CLIENT_ID) {
+      console.log(`\n⚠️  ENABLE_AUTH is true but GOOGLE_CLIENT_ID not provided`);
+      console.log(`   Skipping authorizer creation. Set GOOGLE_CLIENT_ID to enable authentication.`);
+    } else {
+      console.log(`\nℹ️  Authentication disabled (ENABLE_AUTH not set to "true")`);
+    }
 
     // Create integration if Lambda ARN is provided
     if (LAMBDA_FUNCTION_ARN) {

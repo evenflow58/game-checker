@@ -249,11 +249,11 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
   const integrationResponse = await apiClient.send(createIntegrationCommand);
   console.log(`✅ Integration created (ID: ${integrationResponse.IntegrationId})`);
 
-  // Create or get Google OAuth authorizer (only if ENABLE_AUTH is true)
+  // Get existing Google OAuth authorizer (should be created by infrastructure setup)
   let authorizerId: string | undefined;
   
   if (ENABLE_AUTH) {
-    console.log(`Setting up Google OAuth authorizer...`);
+    console.log(`Looking up Google OAuth authorizer...`);
     
     try {
       const authorizersResponse = await apiClient.send(new GetAuthorizersCommand({ ApiId: apiId }));
@@ -262,29 +262,16 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
       );
       
       if (existingAuthorizer) {
-        // Reuse existing authorizer
         authorizerId = existingAuthorizer.AuthorizerId;
         console.log(`✅ Using existing Google OAuth authorizer (ID: ${authorizerId})`);
       } else {
-        // Create new authorizer with current Client ID
-        const createAuthorizerCommand = new CreateAuthorizerCommand({
-          ApiId: apiId,
-          Name: "GoogleOAuthAuthorizer",
-          AuthorizerType: "JWT",
-          IdentitySource: ["$request.header.Authorization"],
-          JwtConfiguration: {
-            Audience: [GOOGLE_CLIENT_ID],
-            Issuer: "https://accounts.google.com",
-          },
-        });
-        
-        const authorizerResponse = await apiClient.send(createAuthorizerCommand);
-        authorizerId = authorizerResponse.AuthorizerId;
-        console.log(`✅ Google OAuth authorizer created (ID: ${authorizerId})`);
-        console.log(`   Client ID: ${GOOGLE_CLIENT_ID}`);
+        console.log(`⚠️  GoogleOAuthAuthorizer not found!`);
+        console.log(`   Ensure infrastructure/apiGateway has been deployed with ENABLE_AUTH=true`);
+        console.log(`   Proceeding without authentication`);
+        authorizerId = undefined;
       }
     } catch (error: any) {
-      console.log(`  ⚠️  Could not create authorizer: ${error.message}`);
+      console.log(`  ⚠️  Could not lookup authorizer: ${error.message}`);
       console.log(`  Proceeding without authentication`);
       authorizerId = undefined;
     }

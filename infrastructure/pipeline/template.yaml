@@ -305,6 +305,10 @@ Resources:
             Value: !Ref Environment
           - Name: AWS_REGION
             Value: !Ref AWS::Region
+          - Name: ENABLE_AUTH
+            Value: !Ref EnableAuth
+          - Name: GOOGLE_CLIENT_ID
+            Value: !Sub '{{resolve:secretsmanager:${GoogleCredentialsSecretArn}:SecretString:client_id}}'
       Source:
         Type: CODEPIPELINE
         BuildSpec: infrastructure/pipeline/buildspec-deploy-infrastructure.yaml
