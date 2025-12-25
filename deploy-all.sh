@@ -39,6 +39,10 @@ info "✓ Colima is running"
 info "Checking if LocalStack is running..."
 LOCALSTACK_ENDPOINT="${LOCALSTACK_ENDPOINT:-http://localhost:4566}"
 
+# For Lambda functions running in LocalStack, they need to use host.docker.internal
+# to access LocalStack services from within the container
+LAMBDA_LOCALSTACK_ENDPOINT="http://host.docker.internal:4566"
+
 if ! curl -s --max-time 5 "${LOCALSTACK_ENDPOINT}/_localstack/health" > /dev/null 2>&1; then
     error "LocalStack is not reachable at ${LOCALSTACK_ENDPOINT}"
     echo "Please start LocalStack first:"
@@ -265,18 +269,15 @@ fi
 
 echo ""
 
-# Deploy Settings GET Lambda
-info "Deploying Settings GET Lambda..."
-
+# Deploy Settings GET endpoint
+info "=== Deploying Settings GET Endpoint ==="
 (
-    cd api/v1/settings
+    cd "${SCRIPT_DIR}/api/v1/settings/get" || exit 1
     
-    # Only install if node_modules doesn't exist or dist doesn't exist
-    if [ ! -d "node_modules" ] || [ ! -d "dist" ]; then
-        if [ ! -d "node_modules" ]; then
-            info "Installing Settings GET dependencies..."
-            npm install --ignore-scripts --legacy-peer-deps 2>/dev/null || npm install --ignore-scripts
-        fi
+    # Check if node_modules exists and package.json is newer
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+        info "Installing dependencies for Settings GET..."
+        npm install
         
         # Build TypeScript if needed
         if [ -f "tsconfig.json" ] && [ ! -d "dist" ]; then
@@ -293,6 +294,9 @@ info "Deploying Settings GET Lambda..."
     API_NAME="GameCheckerAPI" \
     API_GATEWAY_ENDPOINT="${LOCALSTACK_ENDPOINT}" \
     AWS_REGION="${AWS_DEFAULT_REGION}" \
+    ENABLE_AUTH="false" \
+    TABLE_NAME="${DB_TABLE_NAME}" \
+    DYNAMODB_ENDPOINT="${LAMBDA_LOCALSTACK_ENDPOINT}" \
     node dist/deploy.js
 )
 
@@ -300,6 +304,86 @@ if [ $? -eq 0 ]; then
     info "✓ Settings GET deployment completed successfully"
 else
     error "Settings GET deployment failed!"
+    exit 1
+fi
+
+echo ""
+
+# Deploy User POST endpoint (user creation)
+info "=== Deploying User POST Endpoint (User Creation) ==="
+(
+    cd "${SCRIPT_DIR}/api/v1/user/post" || exit 1
+    
+    # Check if node_modules exists and package.json is newer
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+        info "Installing dependencies for User POST..."
+        npm install
+        
+        # Build TypeScript if needed
+        if [ -f "tsconfig.json" ] && [ ! -d "dist" ]; then
+            info "Compiling TypeScript..."
+            npx tsc
+        fi
+    else
+        info "User POST dependencies already installed and built"
+    fi
+    
+    # Run the deployment script
+    info "Deploying User POST endpoint..."
+    FUNCTION_NAME="UserPost" \
+    API_NAME="GameCheckerAPI" \
+    API_GATEWAY_ENDPOINT="${LOCALSTACK_ENDPOINT}" \
+    AWS_REGION="${AWS_DEFAULT_REGION}" \
+    ENABLE_AUTH="false" \
+    TABLE_NAME="${DB_TABLE_NAME}" \
+    DYNAMODB_ENDPOINT="${LAMBDA_LOCALSTACK_ENDPOINT}" \
+    node dist/deploy.js
+)
+
+if [ $? -eq 0 ]; then
+    info "✓ User POST deployment completed successfully"
+else
+    error "User POST deployment failed!"
+    exit 1
+fi
+
+echo ""
+
+# Deploy Settings PUT endpoint
+info "=== Deploying Settings PUT Endpoint ==="
+(
+    cd "${SCRIPT_DIR}/api/v1/settings/put" || exit 1
+    
+    # Check if node_modules exists and package.json is newer
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+        info "Installing dependencies for Settings PUT..."
+        npm install
+        
+        # Build TypeScript if needed
+        if [ -f "tsconfig.json" ] && [ ! -d "dist" ]; then
+            info "Compiling TypeScript..."
+            npx tsc
+        fi
+    else
+        info "Settings PUT dependencies already installed and built"
+    fi
+    
+    # Run the deployment script
+    info "Deploying Settings PUT endpoint..."
+    FUNCTION_NAME="SettingsPut" \
+    API_NAME="GameCheckerAPI" \
+    API_GATEWAY_ENDPOINT="${LOCALSTACK_ENDPOINT}" \
+    AWS_REGION="${AWS_DEFAULT_REGION}" \
+    ENABLE_AUTH="false" \
+    TABLE_NAME="${DB_TABLE_NAME}" \
+    DYNAMODB_ENDPOINT="${LAMBDA_LOCALSTACK_ENDPOINT}" \
+    node dist/deploy.js
+)
+
+if [ $? -eq 0 ]; then
+    info "✓ Settings PUT deployment completed successfully"
+else
+    error "Settings PUT deployment failed!"
     exit 1
 fi
 

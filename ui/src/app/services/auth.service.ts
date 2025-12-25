@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 declare const google: any;
@@ -14,6 +15,7 @@ export interface User {
   providedIn: 'root'
 })
 export class AuthService {
+  private http = inject(HttpClient);
   private userSignal = signal<User | null>(null);
   private tokenSignal = signal<string | null>(null);
   
@@ -71,6 +73,29 @@ export class AuthService {
     localStorage.setItem('id_token', idToken);
     this.decodeToken(idToken);
     this.isAuthenticated.set(true);
+    
+    // Create user in database after successful authentication
+    this.createUserInDatabase();
+  }
+
+  private createUserInDatabase(): void {
+    const token = this.tokenSignal();
+    if (!token) return;
+    
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    
+    this.http.post(`${environment.apiUrl}/v1/user`, {}, { headers })
+      .subscribe({
+        next: (response: any) => {
+          console.log('User created/verified:', response);
+        },
+        error: (error) => {
+          console.error('Failed to create user:', error);
+        }
+      });
   }
 
   private decodeToken(token: string): void {

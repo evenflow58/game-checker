@@ -3,6 +3,7 @@ import {
   CreateFunctionCommand,
   GetFunctionCommand,
   UpdateFunctionCodeCommand,
+  UpdateFunctionConfigurationCommand,
   AddPermissionCommand,
 } from "@aws-sdk/client-lambda";
 import {
@@ -26,11 +27,13 @@ import { pipeline } from "stream";
 
 const pipelineAsync = promisify(pipeline);
 
-const FUNCTION_NAME = process.env.FUNCTION_NAME || "SettingsGet";
+const FUNCTION_NAME = process.env.FUNCTION_NAME || "UserPost";
 const API_NAME = process.env.API_NAME || "GameCheckerAPI";
 const ENDPOINT = process.env.API_GATEWAY_ENDPOINT;
 const REGION = process.env.AWS_REGION || "us-east-1";
-const ROUTE_KEY = process.env.ROUTE_KEY || "GET /v1/settings";
+const ROUTE_KEY = "POST /v1/user";
+const TABLE_NAME = process.env.TABLE_NAME || "GameCheckerTable";
+const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "your-google-client-id.apps.googleusercontent.com";
 const ENABLE_AUTH = process.env.ENABLE_AUTH === "true"; // Set to "true" to enable Google OAuth
 const LAMBDA_ROLE_ARN = process.env.LAMBDA_ROLE_ARN || "arn:aws:iam::000000000000:role/lambda-role";
@@ -107,8 +110,52 @@ async function deployLambda(): Promise<string> {
       ZipFile: zipBuffer,
     });
     
-    const response = await lambdaClient.send(updateCommand);
-    console.log(`✅ Lambda function updated`);
+    await lambdaClient.send(updateCommand);
+    console.log(`✅ Lambda function code updated`);
+    
+    // Wait for the Lambda to finish updating before updating configuration
+    console.log(`Waiting for Lambda to finish updating...`);
+    let attempts = 0;
+    const maxAttempts = 30;
+    while (attempts < maxAttempts) {
+      try {
+        const getFunctionCommand = new GetFunctionCommand({
+          FunctionName: FUNCTION_NAME,
+        });
+        const funcResponse = await lambdaClient.send(getFunctionCommand);
+        
+        if (funcResponse.Configuration?.LastUpdateStatus === 'Successful') {
+          break;
+        } else if (funcResponse.Configuration?.LastUpdateStatus === 'Failed') {
+          throw new Error(`Lambda update failed: ${funcResponse.Configuration?.LastUpdateStatusReason}`);
+        }
+        
+        // Wait 1 second before checking again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+      } catch (error: any) {
+        if (attempts >= maxAttempts - 1) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+      }
+    }
+    
+    // Update environment variables
+    console.log(`Updating Lambda configuration...`);
+    const updateConfigCommand = new UpdateFunctionConfigurationCommand({
+      FunctionName: FUNCTION_NAME,
+      Environment: {
+        Variables: {
+          NODE_ENV: "development",
+          TABLE_NAME: TABLE_NAME,
+          DYNAMODB_ENDPOINT: DYNAMODB_ENDPOINT || "",
+          AWS_REGION: REGION,
+        },
+      },
+    });
+    
+    const response = await lambdaClient.send(updateConfigCommand);
+    console.log(`✅ Lambda configuration updated`);
     return response.FunctionArn!;
   }
 
@@ -125,6 +172,9 @@ async function deployLambda(): Promise<string> {
     Environment: {
       Variables: {
         NODE_ENV: "development",
+        TABLE_NAME: TABLE_NAME,
+        DYNAMODB_ENDPOINT: DYNAMODB_ENDPOINT || "",
+        AWS_REGION: REGION,
       },
     },
   });

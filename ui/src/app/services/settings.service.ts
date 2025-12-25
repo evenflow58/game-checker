@@ -10,6 +10,7 @@ export interface UserSettings {
     email: string;
     name: string;
   };
+  steamId?: string;
   message?: string;
 }
 
@@ -19,7 +20,8 @@ export interface UserSettings {
 export class SettingsService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${environment.apiUrl}/v1/settings`;
+  private settingsApiUrl = `${environment.apiUrl}/v1/settings`;
+  private userApiUrl = `${environment.apiUrl}/v1/user`;
 
   getSettings(): Observable<UserSettings> {
     const token = this.authService.token();
@@ -27,6 +29,26 @@ export class SettingsService {
       'Authorization': `Bearer ${token}`
     });
     
-    return this.http.get<UserSettings>(this.apiUrl, { headers });
+    return this.http.get<UserSettings>(this.settingsApiUrl, { headers });
+  }
+
+  updateSteamId(steamId: string): Observable<any> {
+    const token = this.authService.token();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    
+    return this.http.put(this.settingsApiUrl, { steamId }, { headers });
+  }
+
+  createUser(): Observable<any> {
+    const token = this.authService.token();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    
+    return this.http.post(this.userApiUrl, {}, { headers });
   }
 }

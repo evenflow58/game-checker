@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { SettingsService, UserSettings } from '../services/settings.service';
@@ -7,7 +8,7 @@ import { SettingsService, UserSettings } from '../services/settings.service';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="settings-container">
       <header class="header">
@@ -20,36 +21,41 @@ import { SettingsService, UserSettings } from '../services/settings.service';
       </header>
 
       <main class="content">
-        <div class="card">
-          <h2>User Information</h2>
+        <div class="card steam-section">
+          <h2>Steam Integration</h2>
           
-          <div *ngIf="loading()" class="loading">
-            <div class="spinner"></div>
-            <p>Loading settings...</p>
+          <div class="steam-description">
+            <p>Connect your Steam account to track your game library.</p>
           </div>
 
-          <div *ngIf="error()" class="error">
-            <p>{{ error() }}</p>
-            <button (click)="loadSettings()" class="btn-retry">Retry</button>
+          <div class="form-group">
+            <label for="steamId">Steam ID</label>
+            <input 
+              type="text" 
+              id="steamId" 
+              [(ngModel)]="steamId"
+              placeholder="Enter your Steam ID"
+              class="input-field"
+            >
+            <small class="help-text">Find your Steam ID at <a href="https://steamid.io/" target="_blank">steamid.io</a></small>
           </div>
 
-          <div *ngIf="settings() && !loading()" class="settings-info">
-            <div class="info-row">
-              <label>User ID:</label>
-              <span>{{ settings()?.user?.sub }}</span>
-            </div>
-            <div class="info-row">
-              <label>Email:</label>
-              <span>{{ settings()?.user?.email }}</span>
-            </div>
-            <div class="info-row">
-              <label>Name:</label>
-              <span>{{ settings()?.user?.name }}</span>
-            </div>
-            <div *ngIf="settings()?.message" class="info-row">
-              <label>Message:</label>
-              <span>{{ settings()?.message }}</span>
-            </div>
+          <div class="form-actions">
+            <button 
+              (click)="saveSteamId()" 
+              class="btn-save"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Saving...' : 'Save Steam ID' }}
+            </button>
+          </div>
+
+          <div *ngIf="saveSuccess()" class="success-message">
+            ✓ Steam ID saved successfully!
+          </div>
+          
+          <div *ngIf="saveError()" class="error-message">
+            {{ saveError() }}
           </div>
         </div>
       </main>
@@ -149,51 +155,97 @@ import { SettingsService, UserSettings } from '../services/settings.service';
       100% { transform: rotate(360deg); }
     }
 
-    .error {
-      background: #f8d7da;
-      color: #721c24;
-      padding: 1rem;
-      border-radius: 6px;
-      text-align: center;
+    .steam-description {
+      color: #666;
+      margin-bottom: 1.5rem;
     }
 
-    .btn-retry {
-      margin-top: 1rem;
-      padding: 0.5rem 1.5rem;
+    .steam-description p {
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .help-text {
+      display: block;
+      margin-top: 0.5rem;
+      color: #666;
+      font-size: 0.875rem;
+    }
+
+    .help-text a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-save {
+      padding: 0.75rem 1.5rem;
       background: #667eea;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-weight: 500;
+      font-size: 1rem;
+      transition: background 0.2s;
     }
 
-    .btn-retry:hover {
+    .btn-save:hover:not(:disabled) {
       background: #5568d3;
     }
 
-    .settings-info {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    .btn-save:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
-    .info-row {
-      display: flex;
-      padding: 1rem;
-      background: #f8f9fa;
+    .success-message {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #d4edda;
+      color: #155724;
       border-radius: 6px;
+      font-weight: 500;
     }
 
-    .info-row label {
-      font-weight: 600;
-      color: #666;
-      min-width: 120px;
-    }
-
-    .info-row span {
-      color: #333;
-      flex: 1;
+    .error-message {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #f8d7da;
+      color: #721c24;
+      border-radius: 6px;
     }
   `]
 })
@@ -205,6 +257,11 @@ export class SettingsComponent implements OnInit {
   settings = signal<UserSettings | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
+  
+  steamId = '';
+  saving = signal(false);
+  saveSuccess = signal(false);
+  saveError = signal<string | null>(null);
 
   ngOnInit() {
     if (!this.authService.isAuthenticated()) {
@@ -221,12 +278,32 @@ export class SettingsComponent implements OnInit {
     this.settingsService.getSettings().subscribe({
       next: (data) => {
         this.settings.set(data);
+        this.steamId = data.steamId || '';
         this.loading.set(false);
       },
       error: (err) => {
         this.error.set('Failed to load settings. Please try again.');
         this.loading.set(false);
         console.error('Settings error:', err);
+      }
+    });
+  }
+
+  saveSteamId() {
+    this.saving.set(true);
+    this.saveSuccess.set(false);
+    this.saveError.set(null);
+
+    this.settingsService.updateSteamId(this.steamId).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.saveSuccess.set(true);
+        setTimeout(() => this.saveSuccess.set(false), 3000);
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.saveError.set('Failed to save Steam ID. Please try again.');
+        console.error('Save error:', err);
       }
     });
   }
