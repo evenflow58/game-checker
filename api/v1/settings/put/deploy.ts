@@ -261,33 +261,28 @@ async function attachToApiGateway(functionArn: string): Promise<void> {
         (auth) => auth.Name === "GoogleOAuthAuthorizer"
       );
       
-      // Delete existing authorizer to ensure we use the latest Client ID
       if (existingAuthorizer) {
-        console.log(`  Deleting existing authorizer to update configuration...`);
-        const { DeleteAuthorizerCommand } = require("@aws-sdk/client-apigatewayv2");
-        await apiClient.send(new DeleteAuthorizerCommand({
+        // Reuse existing authorizer
+        authorizerId = existingAuthorizer.AuthorizerId;
+        console.log(`✅ Using existing Google OAuth authorizer (ID: ${authorizerId})`);
+      } else {
+        // Create new authorizer with current Client ID
+        const createAuthorizerCommand = new CreateAuthorizerCommand({
           ApiId: apiId,
-          AuthorizerId: existingAuthorizer.AuthorizerId
-        }));
-        console.log(`  Deleted old authorizer`);
+          Name: "GoogleOAuthAuthorizer",
+          AuthorizerType: "JWT",
+          IdentitySource: ["$request.header.Authorization"],
+          JwtConfiguration: {
+            Audience: [GOOGLE_CLIENT_ID],
+            Issuer: "https://accounts.google.com",
+          },
+        });
+        
+        const authorizerResponse = await apiClient.send(createAuthorizerCommand);
+        authorizerId = authorizerResponse.AuthorizerId;
+        console.log(`✅ Google OAuth authorizer created (ID: ${authorizerId})`);
+        console.log(`   Client ID: ${GOOGLE_CLIENT_ID}`);
       }
-      
-      // Create new authorizer with current Client ID
-      const createAuthorizerCommand = new CreateAuthorizerCommand({
-        ApiId: apiId,
-        Name: "GoogleOAuthAuthorizer",
-        AuthorizerType: "JWT",
-        IdentitySource: ["$request.header.Authorization"],
-        JwtConfiguration: {
-          Audience: [GOOGLE_CLIENT_ID],
-          Issuer: "https://accounts.google.com",
-        },
-      });
-      
-      const authorizerResponse = await apiClient.send(createAuthorizerCommand);
-      authorizerId = authorizerResponse.AuthorizerId;
-      console.log(`✅ Google OAuth authorizer created (ID: ${authorizerId})`);
-      console.log(`   Client ID: ${GOOGLE_CLIENT_ID}`);
     } catch (error: any) {
       console.log(`  ⚠️  Could not create authorizer: ${error.message}`);
       console.log(`  Proceeding without authentication`);
