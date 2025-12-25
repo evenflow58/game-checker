@@ -50,21 +50,43 @@ import { SettingsService, UserSettings } from '../services/settings.service';
 
           <div class="form-actions">
             <button 
-              (click)="saveSteamId()" 
+              (click)="saveSettings()" 
               class="btn-save"
               [disabled]="saving() || loading()"
             >
               <span *ngIf="saving()" class="btn-spinner"></span>
-              {{ saving() ? 'Saving...' : 'Save Steam ID' }}
+              {{ saving() ? 'Saving...' : 'Save Settings' }}
             </button>
           </div>
 
           <div *ngIf="saveSuccess()" class="success-message">
-            ✓ Steam ID saved successfully!
+            ✓ Settings saved successfully!
           </div>
           
           <div *ngIf="saveError()" class="error-message">
             {{ saveError() }}
+          </div>
+        </div>
+
+        <div class="card xbox-section" [class.disabled]="loading()">
+          <h2>Xbox Integration</h2>
+          
+          <div class="xbox-description">
+            <p>Connect your Xbox account to track your game library.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="xboxGamertag">Xbox Gamertag</label>
+            <input 
+              type="text" 
+              id="xboxGamertag" 
+              [ngModel]="xboxGamertag()"
+              (ngModelChange)="xboxGamertag.set($event)"
+              placeholder="Enter your Xbox Gamertag"
+              class="input-field"
+              [disabled]="loading() || saving()"
+            >
+            <small class="help-text">Your Xbox Live gamertag</small>
           </div>
         </div>
       </main>
@@ -339,6 +361,7 @@ export class SettingsComponent implements OnInit {
   error = signal<string | null>(null);
   
   steamId = signal('');
+  xboxGamertag = signal('');
   saving = signal(false);
   saveSuccess = signal(false);
   saveError = signal<string | null>(null);
@@ -358,10 +381,9 @@ export class SettingsComponent implements OnInit {
     this.settingsService.getSettings().subscribe({
       next: (data) => {
         console.log('Settings loaded:', data);
-        console.log('Steam ID from data:', data.steamId);
         this.settings.set(data);
         this.steamId.set(data.steamId || '');
-        console.log('Steam ID set to:', this.steamId());
+        this.xboxGamertag.set(data.xboxGamertag || '');
         this.loading.set(false);
       },
       error: (err) => {
@@ -372,12 +394,12 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  saveSteamId() {
+  saveSettings() {
     this.saving.set(true);
     this.saveSuccess.set(false);
     this.saveError.set(null);
 
-    this.settingsService.updateSteamId(this.steamId()).subscribe({
+    this.settingsService.updateSettings(this.steamId(), this.xboxGamertag()).subscribe({
       next: () => {
         this.saving.set(false);
         this.saveSuccess.set(true);

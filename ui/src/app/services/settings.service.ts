@@ -11,6 +11,7 @@ export interface UserSettings {
     name: string;
   };
   steamId?: string;
+  xboxGamertag?: string;
   message?: string;
 }
 
@@ -32,14 +33,21 @@ export class SettingsService {
     return this.http.get<UserSettings>(this.settingsApiUrl, { headers });
   }
 
-  updateSteamId(steamId: string): Observable<any> {
+  updateSettings(steamId: string, xboxGamertag: string): Observable<any> {
     const token = this.authService.token();
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
     
-    return this.http.put(this.settingsApiUrl, { steamId }, { headers });
+    return this.http.put(this.settingsApiUrl, { 
+      steamId: steamId || undefined,
+      xboxGamertag: xboxGamertag || undefined
+    }, { headers });
+  }
+
+  updateSteamId(steamId: string): Observable<any> {
+    return this.updateSettings(steamId, '');
   }
 
   createUser(): Observable<any> {
