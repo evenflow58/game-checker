@@ -42,8 +42,24 @@ export const handler = async (event: any) => {
   console.log("Name:", userName);
   
   try {
-    // For local testing without authentication, use a test email
-    const effectiveEmail = userEmail || "test@example.com";
+    // Require authentication - only use test email if explicitly in development mode
+    if (!userEmail) {
+      console.error("No email found in JWT claims. Event context:", JSON.stringify(event.requestContext, null, 2));
+      return {
+        statusCode: 401,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+        body: JSON.stringify({
+          error: "User email not found in authentication",
+        }),
+      };
+    }
+    
+    const effectiveEmail = userEmail;
     
     // Get existing settings from DynamoDB
     const getCommand = new GetCommand({

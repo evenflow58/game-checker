@@ -45,10 +45,9 @@ export const handler = async (event: any) => {
     const body = JSON.parse(event.body || '{}');
     const { steamId } = body;
     
-    // For local testing without authentication, use a test email
-    const effectiveEmail = userEmail || "test@example.com";
-    
-    if (!effectiveEmail) {
+    // Require authentication - only use test email if explicitly in development mode
+    if (!userEmail) {
+      console.error("No email found in JWT claims. Event context:", JSON.stringify(event.requestContext, null, 2));
       return {
         statusCode: 401,
         headers: {
@@ -62,6 +61,8 @@ export const handler = async (event: any) => {
         }),
       };
     }
+    
+    const effectiveEmail = userEmail;
     
     // Get existing record
     const getCommand = new GetCommand({

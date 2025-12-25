@@ -37,14 +37,30 @@ export const handler = async (event: any) => {
                  event.queryStringParameters?.userId || 
                  "default";
   
-  // For local testing without authentication, use a test email
-  const effectiveEmail = userEmail || "test@example.com";
-  
   console.log("User ID:", userId);
-  console.log("Email:", effectiveEmail);
+  console.log("Email:", userEmail);
   console.log("Name:", userName);
   
   try {
+    // Require authentication
+    if (!userEmail) {
+      console.error("No email found in JWT claims. Event context:", JSON.stringify(event.requestContext, null, 2));
+      return {
+        statusCode: 401,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+        body: JSON.stringify({
+          error: "User email not found in authentication",
+        }),
+      };
+    }
+    
+    const effectiveEmail = userEmail;
+    
     // Check if user already exists
     const getCommand = new GetCommand({
       TableName: TABLE_NAME,
