@@ -321,8 +321,7 @@ export class LoginComponent implements OnInit {
         
         if (hasSystemIds) {
           // User has at least one system ID, go to games page
-          // TODO: Create games page, for now go to settings
-          this.router.navigate(['/settings']);
+          this.router.navigate(['/games']);
         } else {
           // User needs to configure system IDs, go to settings
           this.router.navigate(['/settings']);

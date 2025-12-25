@@ -16,6 +16,7 @@ import { SettingsService, UserSettings } from '../services/settings.service';
         <div class="user-info" *ngIf="authService.user() as user">
           <img [src]="user.picture" [alt]="user.name" class="avatar" *ngIf="user.picture">
           <span class="user-name">{{ user.name }}</span>
+          <button (click)="goToGames()" class="btn-games">Games</button>
           <button (click)="signOut()" class="btn-signout">Sign Out</button>
         </div>
       </header>
@@ -106,6 +107,21 @@ import { SettingsService, UserSettings } from '../services/settings.service';
     .user-name {
       font-weight: 500;
       color: #333;
+    }
+
+    .btn-games {
+      padding: 0.5rem 1rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn-games:hover {
+      background: #5568d3;
     }
 
     .btn-signout {
@@ -373,6 +389,10 @@ export class SettingsComponent implements OnInit {
         console.error('Save error:', err);
       }
     });
+  }
+
+  goToGames() {
+    this.router.navigate(['/games']);
   }
 
   signOut() {
