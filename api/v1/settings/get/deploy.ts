@@ -15,7 +15,6 @@ import {
   GetRoutesCommand,
   CreateStageCommand,
   GetStagesCommand,
-  CreateAuthorizerCommand,
   GetAuthorizersCommand,
 } from "@aws-sdk/client-apigatewayv2";
 import { readFileSync } from "fs";
