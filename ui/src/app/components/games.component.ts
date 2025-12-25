@@ -75,6 +75,8 @@ import { GamesService, SteamGame } from '../services/games.service';
     .games-container {
       min-height: 100vh;
       background: #f5f7fa;
+      display: flex;
+      flex-direction: column;
     }
 
     .header {
@@ -84,6 +86,7 @@ import { GamesService, SteamGame } from '../services/games.service';
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .header h1 {
@@ -141,7 +144,10 @@ import { GamesService, SteamGame } from '../services/games.service';
     }
 
     .content {
+      flex: 1;
+      overflow-y: auto;
       max-width: 1200px;
+      width: 100%;
       margin: 0 auto;
       padding: 3rem 1rem;
     }
